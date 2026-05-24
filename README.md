@@ -122,12 +122,17 @@ Proje kökünde `render.yaml` Blueprint hazırdır. Akış: GitHub → Render ot
 
 **1. GitHub repo oluşturun ve push edin**
 
+İlk commit hazır. GitHub’a göndermek için (bir kez giriş gerekir):
+
 ```bash
-git init
-git add .
-git commit -m "LOTUS: ilk commit — Render deploy hazır"
-git branch -M main
-git remote add origin https://github.com/KULLANICI/lotus-salon.git
+gh auth login
+gh repo create lotus-guzellik-salonu --public --source=. --remote=origin --push
+```
+
+`gh` yoksa: [GitHub CLI](https://cli.github.com/) kurun veya [github.com/new](https://github.com/new) üzerinden `lotus-guzellik-salonu` repo’sunu oluşturup:
+
+```bash
+git remote add origin https://github.com/burhanakdemir/lotus-guzellik-salonu.git
 git push -u origin main
 ```
 

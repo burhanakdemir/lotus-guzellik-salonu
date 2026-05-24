@@ -1,0 +1,15 @@
+node_modules
+.next
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+!.env.example
+*.db
+*.db-journal
+.DS_Store
+
+# Yerel kaynak görseller (deploy için public/services yeterli)
+kategori resimleri/ (canlıda Render disk veya Docker volume)
+public/uploads/**/*
+!public/uploads/**/.gitkeep

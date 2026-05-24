@@ -1,0 +1,61 @@
+import { CustomerReviews } from "@/components/CustomerReviews";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export const metadata = {
+  title: "Sizden Gelen Yorumlar | LOTUS Güzellik Salonu",
+  description: "Müşterilerimizin deneyimleri ve yorumları.",
+};
+
+export default async function YorumlarPage() {
+  const session = await getSession();
+  const isMember = session?.role === "MEMBER";
+
+  const rows = await prisma.customerReview.findMany({
+    where: { status: "APPROVED" },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      content: true,
+      imageUrls: true,
+      createdAt: true,
+      user: { select: { name: true } },
+      guestName: true,
+    },
+  });
+
+  const initialReviews = rows.map((r) => ({
+    id: r.id,
+    content: r.content,
+    imageUrls: r.imageUrls,
+    createdAt: r.createdAt.toISOString(),
+    authorName: r.user?.name ?? r.guestName ?? "Misafir",
+  }));
+
+  const member = isMember
+    ? { isMember: true as const, name: session!.name }
+    : { isMember: false as const };
+
+  return (
+    <div>
+      <section className="relative overflow-hidden bg-gradient-to-br from-lotus-800 via-lotus-700 to-lotus-600 px-4 py-12 text-center text-white md:py-16">
+        <div className="hero-pattern absolute inset-0 opacity-30" />
+        <div className="relative mx-auto max-w-3xl">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-lotus-center">
+            Deneyimleriniz
+          </p>
+          <h1 className="font-display mt-3 text-4xl font-light md:text-5xl">
+            Sizden Gelen Yorumlar
+          </h1>
+          <p className="mt-4 text-rose-100/90">
+            Salonumuzdaki deneyiminizi paylaşın, diğer misafirlerimiz okusun
+          </p>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
+        <CustomerReviews initialReviews={initialReviews} member={member} />
+      </div>
+    </div>
+  );
+}

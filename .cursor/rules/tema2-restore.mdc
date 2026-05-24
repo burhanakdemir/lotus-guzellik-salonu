@@ -1,0 +1,40 @@
+---
+description: Public site tema2 yedeğini geri yükleme — kullanıcı tema2'ye dön derse
+alwaysApply: true
+---
+
+# Tema 2 (public site — güncel görünüm)
+
+Onaylı **müşteri tarafı** sayfa yapısı ve stilleri **`themes/tema2/`** altında yedeklidir.
+
+## Kullanıcı şunları yazarsa hemen uygula
+
+- "tema2'ye dön"
+- "tema2 geri yükle"
+- "tema 2'ye dön"
+- "public site temasını geri al" (tema2 bağlamında)
+
+## Geri yükleme adımları
+
+1. Terminalde çalıştır: `npm run theme:restore-tema2`
+2. Komut başarılıysa kullanıcıya kısaca bildir; gerekirse dev sunucusunu yenilemesini söyle.
+3. Komut yoksa veya başarısızsa `themes/tema2/` içindeki dosyaları aynı yollara manuel kopyala (bkz. `themes/tema2/README.md`).
+
+## Yedeklenen dosyalar
+
+Manifest: `scripts/tema2-manifest.mjs`
+
+- `src/app/globals.css`, `layout.tsx`, `page.tsx` + public sayfalar (`hizmetler`, `randevu`, `hakkimizda`, `galeri`, `yorumlar`, `giris`, `uye-ol`, `hesabim`)
+- Public `src/components/*` (admin klasörü hariç)
+- `src/lib/group-services-by-category.ts`, `service-categories.ts`
+- `prisma/services-catalog.ts`
+- `themes/tema2/data/services-db.json` — admin’de düzenlenen kategori/alt hizmet anlık görüntüsü (geri yüklemede DB’ye yazılır)
+- `public/hero-bg.svg`, `promo-placeholder.svg`, `public/services/` (kategoriler + hizmet görselleri)
+
+`theme:save-tema2` yalnızca yedek alır; canlı dosya veya katalogda ekleme/çıkarma yapmaz.
+
+## Yedeği güncelleme
+
+Kullanıcı mevcut public site görünümünü yeni tema2 olarak kaydetmek isterse: `npm run theme:save-tema2`
+
+Admin panel tema2 kapsamı **dışındadır**. Tema 1 için ayrı kural: `tema1-restore.mdc`.

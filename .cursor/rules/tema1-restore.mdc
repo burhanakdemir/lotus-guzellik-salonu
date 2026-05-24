@@ -1,0 +1,33 @@
+---
+description: Ana sayfa tema1 yedeğini geri yükleme — kullanıcı tema1'e dön derse
+alwaysApply: true
+---
+
+# Tema 1 (ana sayfa stili)
+
+Onaylı public site / ana sayfa görünümü **`themes/tema1/`** altında yedeklidir.
+
+## Kullanıcı şunları yazarsa hemen uygula
+
+- "tema1'e dön"
+- "tema1 geri yükle"
+- "tema 1'e dön"
+- "ana sayfa temasını geri al"
+
+## Geri yükleme adımları
+
+1. Terminalde çalıştır: `npm run theme:restore-tema1`
+2. Komut başarılıysa kullanıcıya kısaca bildir; gerekirse dev sunucusunu yenilemesini söyle.
+3. Komut yoksa veya başarısızsa `themes/tema1/` içindeki dosyaları aynı yollara manuel kopyala (bkz. `themes/tema1/README.md`).
+
+## Yedeklenen dosyalar
+
+- `src/app/globals.css`, `layout.tsx`, `page.tsx`
+- `src/components/WeeklyPromotions.tsx`, `Header.tsx`, `Footer.tsx`, `ServiceCard.tsx`
+- `public/hero-bg.svg`, `public/promo-placeholder.svg`
+
+## Yedeği güncelleme
+
+Kullanıcı mevcut ana sayfa stilini yeni tema1 olarak kaydetmek isterse: `npm run theme:save-tema1`
+
+Admin panel (`src/app/admin/`, `admin.css`) tema1 kapsamı **dışındadır**.

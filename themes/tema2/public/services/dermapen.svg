@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <defs>
+    <linearGradient id="bg-dermapen" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5c4a6b"/>
+      <stop offset="35%" stop-color="#e8a0b4"/>
+      <stop offset="100%" stop-color="#fff0f5"/>
+    </linearGradient>
+    <linearGradient id="shine-dermapen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow-dermapen" cx="85%" cy="25%" r="55%">
+      <stop offset="0%" stop-color="#FFE4EC" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#FFE4EC" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="lotus-dots-dermapen" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.8" fill="#ffffff" opacity="0.06"/>
+    </pattern>
+    <filter id="text-shadow-dermapen">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#5c4a6b" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg-dermapen)"/>
+  <rect width="1200" height="900" fill="url(#glow-dermapen)"/>
+  <rect width="1200" height="900" fill="url(#lotus-dots-dermapen)"/>
+  <rect x="0" y="0" width="1200" height="350" fill="url(#shine-dermapen)"/>
+  
+  <defs>
+    <linearGradient id="petal-dermapen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE4EC"/>
+      <stop offset="50%" stop-color="#F4A4BC"/>
+      <stop offset="100%" stop-color="#D97B9A"/>
+    </linearGradient>
+    <radialGradient id="center-dermapen" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFF8E7"/>
+      <stop offset="100%" stop-color="#F5D76E"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="920" cy="268" rx="39.199999999999996" ry="89.6" fill="url(#petal-dermapen)" opacity="0.4" transform="rotate(0 920 380)"/><ellipse cx="920" cy="268" rx="39.199999999999996" ry="89.6" fill="url(#petal-dermapen)" opacity="0.4" transform="rotate(45 920 380)"/><ellipse cx="920" cy="268" rx="39.199999999999996" ry="89.6" fill="url(#petal-dermapen)" opacity="0.4" transform="rotate(90 920 380)"/><ellipse cx="920" cy="268" rx="39.199999999999996" ry="89.6" fill="url(#petal-dermapen)" opacity="0.4" transform="rotate(135 920 380)"/><ellipse cx="920" cy="268" rx="39.199999999999996" ry="89.6" fill="url(#petal-dermapen)" opacity="0.4" transform="rotate(180 920 380)"/><ellipse cx="920" cy="268" rx="39.199999999999996" ry="89.6" fill="url(#petal-dermapen)" opacity="0.4" transform="rotate(225 920 380)"/><ellipse cx="920" cy="268" rx="39.199999999999996" ry="89.6" fill="url(#petal-dermapen)" opacity="0.4" transform="rotate(270 920 380)"/><ellipse cx="920" cy="268" rx="39.199999999999996" ry="89.6" fill="url(#petal-dermapen)" opacity="0.4" transform="rotate(315 920 380)"/>
+  <ellipse cx="920" cy="301.6" rx="22.4" ry="50.4" fill="#FFE4EC" opacity="0.55" transform="rotate(15 920 380)"/><ellipse cx="920" cy="301.6" rx="22.4" ry="50.4" fill="#FFE4EC" opacity="0.55" transform="rotate(75 920 380)"/><ellipse cx="920" cy="301.6" rx="22.4" ry="50.4" fill="#FFE4EC" opacity="0.55" transform="rotate(135 920 380)"/><ellipse cx="920" cy="301.6" rx="22.4" ry="50.4" fill="#FFE4EC" opacity="0.55" transform="rotate(195 920 380)"/><ellipse cx="920" cy="301.6" rx="22.4" ry="50.4" fill="#FFE4EC" opacity="0.55" transform="rotate(255 920 380)"/><ellipse cx="920" cy="301.6" rx="22.4" ry="50.4" fill="#FFE4EC" opacity="0.55" transform="rotate(315 920 380)"/>
+  <circle cx="920" cy="380" r="33.599999999999994" fill="url(#center-dermapen)" opacity="0.6000000000000001"/>
+  <ellipse cx="920" cy="534" rx="98" ry="22.4" fill="#9BB89E" opacity="0.25"/>
+  
+  
+  <defs>
+    <linearGradient id="petal-dermapen-sm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE4EC"/>
+      <stop offset="50%" stop-color="#F4A4BC"/>
+      <stop offset="100%" stop-color="#D97B9A"/>
+    </linearGradient>
+    <radialGradient id="center-dermapen-sm" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFF8E7"/>
+      <stop offset="100%" stop-color="#F5D76E"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="1050" cy="72" rx="16.8" ry="38.4" fill="url(#petal-dermapen-sm)" opacity="0.2" transform="rotate(0 1050 120)"/><ellipse cx="1050" cy="72" rx="16.8" ry="38.4" fill="url(#petal-dermapen-sm)" opacity="0.2" transform="rotate(45 1050 120)"/><ellipse cx="1050" cy="72" rx="16.8" ry="38.4" fill="url(#petal-dermapen-sm)" opacity="0.2" transform="rotate(90 1050 120)"/><ellipse cx="1050" cy="72" rx="16.8" ry="38.4" fill="url(#petal-dermapen-sm)" opacity="0.2" transform="rotate(135 1050 120)"/><ellipse cx="1050" cy="72" rx="16.8" ry="38.4" fill="url(#petal-dermapen-sm)" opacity="0.2" transform="rotate(180 1050 120)"/><ellipse cx="1050" cy="72" rx="16.8" ry="38.4" fill="url(#petal-dermapen-sm)" opacity="0.2" transform="rotate(225 1050 120)"/><ellipse cx="1050" cy="72" rx="16.8" ry="38.4" fill="url(#petal-dermapen-sm)" opacity="0.2" transform="rotate(270 1050 120)"/><ellipse cx="1050" cy="72" rx="16.8" ry="38.4" fill="url(#petal-dermapen-sm)" opacity="0.2" transform="rotate(315 1050 120)"/>
+  <ellipse cx="1050" cy="86.4" rx="9.6" ry="21.599999999999998" fill="#FFE4EC" opacity="0.35" transform="rotate(15 1050 120)"/><ellipse cx="1050" cy="86.4" rx="9.6" ry="21.599999999999998" fill="#FFE4EC" opacity="0.35" transform="rotate(75 1050 120)"/><ellipse cx="1050" cy="86.4" rx="9.6" ry="21.599999999999998" fill="#FFE4EC" opacity="0.35" transform="rotate(135 1050 120)"/><ellipse cx="1050" cy="86.4" rx="9.6" ry="21.599999999999998" fill="#FFE4EC" opacity="0.35" transform="rotate(195 1050 120)"/><ellipse cx="1050" cy="86.4" rx="9.6" ry="21.599999999999998" fill="#FFE4EC" opacity="0.35" transform="rotate(255 1050 120)"/><ellipse cx="1050" cy="86.4" rx="9.6" ry="21.599999999999998" fill="#FFE4EC" opacity="0.35" transform="rotate(315 1050 120)"/>
+  <circle cx="1050" cy="120" r="14.399999999999999" fill="url(#center-dermapen-sm)" opacity="0.4"/>
+  <ellipse cx="1050" cy="186" rx="42" ry="9.6" fill="#9BB89E" opacity="0.25"/>
+  
+  <path d="M0 780 Q300 720 600 760 T1200 740 L1200 900 L0 900Z" fill="#7BA388" opacity="0.12"/>
+  <text x="96" y="98" font-family="system-ui,sans-serif" font-size="13" font-weight="600" letter-spacing="2" fill="#FFF8E7" opacity="0.95">Cilt Bakımı Hizmetleri</text>
+  <line x1="72" y1="680" x2="160" y2="680" stroke="#F5D76E" stroke-width="3" opacity="0.9"/>
+  <text x="72" y="620" font-family="Georgia,serif" font-size="52" fill="#ffffff" filter="url(#text-shadow-dermapen)">Dermapen</text>
+  
+  <text x="72" y="780" font-family="Georgia,serif" font-size="22" letter-spacing="4" fill="#F5D76E">LOTUS</text>
+</svg>

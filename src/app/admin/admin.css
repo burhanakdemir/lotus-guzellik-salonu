@@ -1,0 +1,1108 @@
+/* Admin panel — kompakt görünüm */
+body:has(.admin-shell) {
+  background: #f3f4f6 !important;
+}
+
+.admin-shell {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.admin-giris-only {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+}
+
+.admin-shell h1 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-lotus-900);
+}
+
+.admin-shell h2 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-lotus-800);
+}
+
+.admin-shell h3 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.admin-shell .card {
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.375rem;
+  box-shadow: none;
+}
+
+.admin-shell .input {
+  padding: 0.25rem 0.5rem;
+  font-size: 12px;
+  border-radius: 0.25rem;
+}
+
+.admin-shell select.input {
+  max-width: 100%;
+  cursor: pointer;
+}
+
+.admin-shell .label {
+  font-size: 11px;
+  margin-bottom: 0.125rem;
+}
+
+.admin-shell .btn-primary,
+.admin-shell .btn-secondary {
+  padding: 0.25rem 0.625rem;
+  font-size: 11px;
+  border-radius: 0.25rem;
+  box-shadow: none;
+}
+
+.admin-shell .btn-primary:hover,
+.admin-shell .btn-secondary:hover {
+  transform: none;
+}
+
+.admin-shell details > summary {
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  list-style: none;
+}
+
+.admin-shell details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-shell details[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+.admin-shell table {
+  font-size: 11px;
+}
+
+.admin-shell table th,
+.admin-shell table td {
+  padding: 0.25rem 0.375rem;
+}
+
+/* Randevu takvimi */
+.apt-calendar__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.apt-calendar__views {
+  display: inline-flex;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.apt-calendar__view-btn {
+  padding: 0.25rem 0.625rem;
+  font-size: 11px;
+  background: #fff;
+  color: #4b5563;
+  border: none;
+  border-right: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.apt-calendar__view-btn:last-child {
+  border-right: none;
+}
+
+.apt-calendar__view-btn:hover {
+  background: #f9fafb;
+}
+
+.apt-calendar__view-btn--active {
+  background: var(--color-lotus-700);
+  color: #fff;
+}
+
+.apt-calendar__view-btn--active:hover {
+  background: var(--color-lotus-800);
+}
+
+.apt-calendar__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.apt-calendar__weekday {
+  padding: 0.25rem;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.apt-calendar__month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.apt-calendar__day-cell {
+  min-height: 4.5rem;
+  padding: 0.2rem;
+  border-right: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  background: #fff;
+  cursor: pointer;
+  vertical-align: top;
+}
+
+.apt-calendar__day-cell:hover {
+  background: #fdf2f8;
+}
+
+.apt-calendar__day-cell--muted {
+  background: #fafafa;
+}
+
+.apt-calendar__day-cell--muted .apt-calendar__day-num {
+  color: #9ca3af;
+}
+
+.apt-calendar__day-cell--today {
+  background: #fff7ed;
+  box-shadow: inset 0 0 0 2px var(--color-lotus-400);
+}
+
+.apt-calendar__day-num {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 0.125rem;
+}
+
+.apt-calendar__day-events {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.apt-calendar__more {
+  font-size: 9px;
+  color: #6b7280;
+  padding: 0 2px;
+}
+
+.apt-chip {
+  display: block;
+  width: 100%;
+  padding: 1px 3px;
+  font-size: 9px;
+  line-height: 1.2;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.apt-chip__time {
+  font-weight: 600;
+  margin-right: 2px;
+}
+
+.apt-chip--pending {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.apt-chip--confirmed {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  color: #065f46;
+}
+
+.apt-chip--cancelled {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #6b7280;
+  text-decoration: line-through;
+}
+
+.apt-chip--completed {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+.apt-calendar__week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  min-height: 12rem;
+}
+
+.apt-calendar__week-col {
+  border-right: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+}
+
+.apt-calendar__week-col:last-child {
+  border-right: none;
+}
+
+.apt-calendar__week-col--today {
+  background: #fff7ed;
+}
+
+.apt-calendar__week-header {
+  width: 100%;
+  padding: 0.375rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  text-align: center;
+  cursor: pointer;
+}
+
+.apt-calendar__week-header:hover {
+  background: #fdf2f8;
+}
+
+.apt-calendar__week-body {
+  flex: 1;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.apt-calendar__day-panel {
+  max-width: 100%;
+}
+
+/* Günlük saat ızgarası — Ayarlar / WorkScheduleEditor kart stili */
+.apt-calendar__slot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.375rem;
+}
+
+@media (min-width: 480px) {
+  .apt-calendar__slot-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .apt-calendar__slot-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .apt-calendar__slot-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .apt-calendar__slot-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}
+
+.apt-calendar__slot-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.25rem 0.35rem;
+  border-radius: 0.25rem;
+  border: 1px solid #e5e7eb;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.apt-calendar__slot-chip--free {
+  background: #fff;
+  border-color: var(--color-lotus-200);
+  color: #374151;
+  cursor: pointer;
+}
+
+.apt-calendar__slot-chip--free:hover:not(:disabled) {
+  border-color: var(--color-lotus-400);
+  background: #fdf2f8;
+  color: var(--color-lotus-800);
+}
+
+.apt-calendar__slot-chip--free:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.apt-calendar__slot-chip--busy {
+  background: #f9fafb;
+  border-color: #f3f4f6;
+  color: #d1d5db;
+  cursor: default;
+}
+
+.apt-calendar__slot-chip--booked {
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+  min-height: 2.75rem;
+}
+
+.apt-calendar__slot-chip--booked.apt-chip--pending {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.apt-calendar__slot-chip--booked.apt-chip--confirmed {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  color: #065f46;
+}
+
+.apt-calendar__slot-chip--booked.apt-chip--cancelled {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+.apt-calendar__slot-chip--booked.apt-chip--completed {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+.apt-calendar__slot-chip-time {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.apt-calendar__slot-chip-name {
+  max-width: 100%;
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.apt-calendar__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 0.35);
+  padding: 1rem;
+}
+
+.apt-calendar__modal {
+  width: 100%;
+  max-width: 28rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 20px 40px rgb(0 0 0 / 0.15);
+}
+
+.apt-calendar__member-list {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 0.125rem;
+  max-height: 11rem;
+  overflow-y: auto;
+  border: 1px solid var(--color-lotus-200);
+  border-radius: 0.375rem;
+  background: #fff;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.1);
+}
+
+.apt-calendar__member-option {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+  padding: 0.5rem 0.625rem;
+  font-size: 11px;
+  text-align: left;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.apt-calendar__member-option:hover {
+  background: #fdf2f8;
+}
+
+.apt-calendar__member-option:last-child {
+  border-bottom: none;
+}
+
+.apt-calendar__hour-row {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  border-bottom: 1px solid #f3f4f6;
+  min-height: 2.25rem;
+}
+
+.apt-calendar__hour-label {
+  padding: 0.25rem;
+  font-size: 10px;
+  color: #9ca3af;
+  border-right: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+
+.apt-calendar__hour-slots {
+  padding: 0.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.apt-calendar__day-event {
+  padding: 0.25rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 11px;
+  border: 1px solid transparent;
+}
+
+.apt-day-event--pending {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.apt-day-event--confirmed {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+
+.apt-day-event--cancelled {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+.apt-day-event--completed {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.apt-calendar__detail {
+  border-left: 3px solid var(--color-lotus-500);
+}
+
+/* Üyeler */
+.members-admin__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  background: rgb(0 0 0 / 0.35);
+  padding: 1.5rem 1rem;
+}
+
+.members-admin__modal {
+  width: 100%;
+  max-width: 32rem;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  margin: auto 0;
+  box-shadow: 0 20px 40px rgb(0 0 0 / 0.15);
+}
+
+.members-admin__modal-close {
+  display: inline-flex;
+  height: 1.75rem;
+  width: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 1.125rem;
+  line-height: 1;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.members-admin__modal-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.members-admin__delete-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+}
+
+.members-admin__delete-confirm-text {
+  margin: 0;
+  font-size: 11px;
+  color: #991b1b;
+  text-align: right;
+}
+
+.members-admin__list {
+  max-height: none;
+  overflow: visible;
+}
+
+.members-admin__table {
+  font-size: 11px;
+  border-collapse: collapse;
+}
+
+.members-admin__table th {
+  padding: 0.375rem 0.5rem;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.members-admin__row {
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.members-admin__row:hover {
+  background: #fdf2f8;
+}
+
+.members-admin__row--selected {
+  background: #fce7f3;
+}
+
+.members-admin__row td {
+  padding: 0.375rem 0.5rem;
+}
+
+.members-admin__status {
+  display: inline-block;
+  padding: 0.1rem 0.35rem;
+  border-radius: 9999px;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.members-admin__status--on {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.members-admin__status--off {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.members-admin__detail h2 {
+  font-size: 0.875rem;
+}
+
+.members-admin__section {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.members-admin__section legend {
+  margin-bottom: 0.25rem;
+}
+
+/* Hizmetler tablosu */
+.services-admin__table-wrap {
+  overflow-x: auto;
+}
+
+.services-admin__table {
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.services-admin__th {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.services-admin__th--num {
+  text-align: center;
+  width: 4.5rem;
+}
+
+.services-admin__th--img {
+  width: 5.5rem;
+}
+
+.services-admin__th--actions {
+  text-align: right;
+  min-width: 22rem;
+}
+
+.services-admin__display-row .services-admin__th {
+  padding: 0.35rem 0.5rem;
+  background: #fff7ed;
+  border-bottom: none;
+  vertical-align: middle;
+}
+
+.services-admin__display-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #9a3412;
+  cursor: pointer;
+  user-select: none;
+}
+
+.services-admin__display-toggle input {
+  width: 14px;
+  height: 14px;
+  accent-color: #c25b7d;
+  cursor: pointer;
+}
+
+.services-admin__row {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.services-admin__row:hover {
+  background: #fdfcfb;
+}
+
+.services-admin__td {
+  padding: 0.625rem 0.75rem;
+  vertical-align: middle;
+}
+
+.services-admin__td--img {
+  width: 5.5rem;
+}
+
+.services-admin__td--num {
+  text-align: center;
+}
+
+.services-admin__td--actions {
+  text-align: right;
+  min-width: 22rem;
+}
+
+.services-admin__thumb {
+  position: relative;
+  width: 3.5rem;
+  height: 3rem;
+  overflow: hidden;
+  border-radius: 0.375rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+.services-admin__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-lotus-900);
+  line-height: 1.3;
+}
+
+.services-admin__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.services-admin__badge {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  font-size: 10px;
+  font-weight: 500;
+  border-radius: 9999px;
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.services-admin__badge--featured {
+  background: #fce7f3;
+  color: var(--color-lotus-800);
+}
+
+.services-admin__badge--inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.services-admin__stat {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-lotus-800);
+}
+
+.services-admin__stat-unit {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.services-admin__price {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-lotus-900);
+  white-space: nowrap;
+}
+
+.services-admin__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.375rem;
+}
+
+.services-admin__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.65rem;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  border-radius: 0.375rem;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.services-admin__btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.services-admin__btn--upload {
+  color: var(--color-lotus-700);
+  border-color: #fbcfe8;
+  background: #fdf2f8;
+}
+
+.services-admin__btn--upload:hover {
+  background: #fce7f3;
+  border-color: var(--color-lotus-400);
+}
+
+.services-admin__btn--featured {
+  color: #92400e;
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.services-admin__btn--featured:hover {
+  background: #fef3c7;
+}
+
+.services-admin__btn--featured-on {
+  color: var(--color-lotus-800);
+  border-color: var(--color-lotus-400);
+  background: #fce7f3;
+}
+
+.services-admin__btn--delete {
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.services-admin__btn--delete:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+.services-admin__btn--edit {
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.services-admin__btn--edit:hover:not(:disabled) {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.services-admin__btn--edit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.services-admin__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 10rem;
+}
+
+.services-admin__edit--center {
+  align-items: center;
+  margin: 0 auto;
+  max-width: 8rem;
+}
+
+.services-admin__edit-input {
+  font-size: 12px;
+  padding: 0.35rem 0.5rem;
+}
+
+.services-admin__edit-input--num {
+  width: 5rem;
+  text-align: center;
+}
+
+.services-admin__edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.services-admin__edit-save,
+.services-admin__edit-cancel {
+  padding: 0.2rem 0.45rem;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 0.25rem;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.services-admin__edit-save {
+  background: var(--color-lotus-600);
+  border-color: var(--color-lotus-600);
+  color: #fff;
+}
+
+.services-admin__edit-save:hover {
+  background: var(--color-lotus-700);
+}
+
+.services-admin__edit-cancel {
+  background: #fff;
+  color: #6b7280;
+}
+
+.services-admin__edit-cancel:hover {
+  background: #f3f4f6;
+}
+
+/* Kampanyalar */
+.promo-admin__form .label {
+  display: block;
+}
+
+.promo-admin__services-field {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  background: #fafafa;
+}
+
+.promo-admin__scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.promo-admin__scope-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.promo-admin__scope-option input {
+  accent-color: var(--color-lotus-600);
+}
+
+.promo-admin__service-picker {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.promo-admin__service-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.promo-admin__service-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.375rem;
+  max-height: 12rem;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.promo-admin__service-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 11px;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.promo-admin__service-item:hover {
+  border-color: #d1d5db;
+}
+
+.promo-admin__service-item--checked {
+  border-color: var(--color-lotus-400);
+  background: #fdf2f8;
+  color: var(--color-lotus-800);
+  font-weight: 500;
+}
+
+.promo-admin__service-item input {
+  accent-color: var(--color-lotus-600);
+  flex-shrink: 0;
+}
+
+.promo-admin__table-wrap {
+  overflow-x: auto;
+}
+
+.promo-admin__th {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.promo-admin__td {
+  padding: 0.5rem 0.75rem;
+  font-size: 12px;
+  vertical-align: top;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.promo-admin__td--discount {
+  font-weight: 600;
+  color: var(--color-lotus-800);
+  white-space: nowrap;
+}
+
+.promo-admin__td--date {
+  white-space: nowrap;
+  font-size: 11px;
+  color: #4b5563;
+}
+
+.promo-admin__services-badge {
+  display: inline-block;
+  max-width: 14rem;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #4b5563;
+}
+
+.promo-admin__services-badge--all {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: #fce7f3;
+  color: var(--color-lotus-800);
+  font-weight: 500;
+}
+
+.promo-admin__empty {
+  padding: 1rem;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.promo-admin__row:hover {
+  background: #fdfcfb;
+}
+
+.promo-admin__th--actions,
+.promo-admin__td--actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.promo-admin__td--desc {
+  min-width: 11rem;
+  max-width: 16rem;
+}
+
+.promo-admin__td--desc .input {
+  font-size: 11px;
+}

@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+/* Lotus çiçeği renk paleti */
+@theme {
+  --color-lotus-50: #fff9fb;
+  --color-lotus-100: #fff0f5;
+  --color-lotus-200: #ffd6e4;
+  --color-lotus-300: #f4b8c8;
+  --color-lotus-400: #e8a0b4;
+  --color-lotus-500: #d97b9a;
+  --color-lotus-600: #c25b7d;
+  --color-lotus-700: #a84868;
+  --color-lotus-800: #8e4462;
+  --color-lotus-900: #6b3349;
+  --color-lotus-petal: #f4a4bc;
+  --color-lotus-blush: #fdeef4;
+  --color-lotus-center: #f5d76e;
+  --color-lotus-leaf: #9bb89e;
+  --color-lotus-leaf-dark: #7ba388;
+  --color-lotus-water: #d4e8f0;
+
+  /* rose = lotus alias (mevcut sınıflar uyumlu kalsın) */
+  --color-rose-50: #fff9fb;
+  --color-rose-100: #fff0f5;
+  --color-rose-200: #ffd6e4;
+  --color-rose-300: #f4b8c8;
+  --color-rose-400: #e8a0b4;
+  --color-rose-500: #d97b9a;
+  --color-rose-600: #c25b7d;
+  --color-rose-700: #a84868;
+  --color-rose-800: #8e4462;
+  --color-rose-900: #6b3349;
+
+  --color-cream: #fffbfa;
+  --color-champagne: #fef6f8;
+  --color-gold: #e8c547;
+  --color-gold-light: #fff3d4;
+  --color-gold-dark: #c9a03a;
+  --color-ink: #3d2832;
+  --font-display: var(--font-cormorant), Georgia, serif;
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: linear-gradient(180deg, var(--color-lotus-blush) 0%, var(--color-cream) 120px);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-lotus-600 to-lotus-800 px-7 py-3.5 text-sm font-semibold tracking-wide text-white shadow-lg shadow-lotus-800/25 transition-all duration-300 hover:-translate-y-0.5 hover:from-lotus-700 hover:to-lotus-900 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-lotus-center focus:ring-offset-2;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-full border border-lotus-300/80 bg-white/90 px-7 py-3.5 text-sm font-semibold tracking-wide text-lotus-800 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-lotus-500 hover:bg-lotus-50 focus:outline-none focus:ring-2 focus:ring-lotus-300 focus:ring-offset-2;
+}
+
+.btn-gold {
+  @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-gold-dark via-gold to-lotus-center px-7 py-3.5 text-sm font-bold tracking-wide text-lotus-900 shadow-lg shadow-gold/30 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl;
+}
+
+.card {
+  @apply rounded-2xl bg-white/95 p-6 shadow-sm shadow-lotus-800/5 ring-1 ring-lotus-200/80 backdrop-blur-sm;
+}
+
+.card-hover {
+  @apply transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-lotus-600/15 hover:ring-lotus-300/60;
+}
+
+.input {
+  @apply w-full rounded-xl border border-lotus-200/80 bg-white px-4 py-3.5 text-sm outline-none transition placeholder:text-lotus-400/60 focus:border-lotus-500 focus:ring-2 focus:ring-lotus-200/80;
+}
+
+.label {
+  @apply mb-1.5 block text-sm font-medium text-lotus-900/80;
+}
+
+.section-title {
+  @apply font-display text-4xl font-light tracking-tight text-lotus-900 md:text-5xl;
+}
+
+.section-subtitle {
+  @apply mt-3 max-w-xl text-base leading-relaxed text-lotus-800/70;
+}
+
+.gold-line {
+  @apply mx-auto mt-4 h-px w-16 bg-gradient-to-r from-transparent via-lotus-center to-transparent;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.8s ease-out forwards;
+}
+
+.animate-fade-up-delay {
+  animation: fade-up 0.8s ease-out 0.15s forwards;
+  opacity: 0;
+}
+
+.animate-fade-up-delay-2 {
+  animation: fade-up 0.8s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.hero-pattern {
+  background-image: radial-gradient(circle at 1px 1px, rgba(244, 164, 188, 0.12) 1px, transparent 0);
+  background-size: 28px 28px;
+}
+
+.promo-glow {
+  box-shadow: 0 0 60px -12px rgba(244, 184, 200, 0.55);
+}

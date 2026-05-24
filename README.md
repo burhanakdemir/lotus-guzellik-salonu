@@ -116,55 +116,67 @@ Admin yüklemeleri (galeri, yorum, özel hizmet fotoğrafı) `lotus_uploads` vol
 
 Statik hizmet/kategori görselleri Docker imajında `public/services/` içindedir; deploy öncesi `npm run images:prepare` çalıştırıp JPG’leri repoya eklemeniz önerilir.
 
-### Render + Git (önerilen canlı)
+### Render + Neon (önerilen canlı — ~$7/ay)
 
-Proje kökünde `render.yaml` Blueprint hazırdır. Akış: GitHub → Render otomatik deploy.
+Render PostgreSQL yerine **Neon** (ücretsiz DB) kullanılır. Tahmini maliyet:
 
-**1. GitHub repo oluşturun ve push edin**
+| Bileşen | Maliyet |
+|---------|---------|
+| Neon PostgreSQL | $0 (Free tier) |
+| Render Web (Starter) | ~$7/ay |
+| Upload diski (1 GB) | ~$0.25/ay |
+| **Toplam** | **~$7.25/ay** |
 
-İlk commit hazır. GitHub’a göndermek için (bir kez giriş gerekir):
+**1. Neon veritabanı (ücretsiz)**
+
+1. [neon.tech](https://neon.tech) → GitHub ile kayıt
+2. **New Project** → bölge: **Frankfurt (eu-central-1)**
+3. **Connection details** → iki URL kopyalayın:
+   - **Pooled** → Render `DATABASE_URL`
+   - **Direct** → Render `DIRECT_URL`
+4. Her URL’nin sonunda `?sslmode=require` olduğundan emin olun
+
+**2. GitHub push** (zaten yapıldıysa atlayın)
 
 ```bash
-gh auth login
-gh repo create lotus-guzellik-salonu --public --source=. --remote=origin --push
+git push origin main
 ```
 
-`gh` yoksa: [GitHub CLI](https://cli.github.com/) kurun veya [github.com/new](https://github.com/new) üzerinden `lotus-guzellik-salonu` repo’sunu oluşturup:
-
-```bash
-git remote add origin https://github.com/burhanakdemir/lotus-guzellik-salonu.git
-git push -u origin main
-```
-
-`.env` dosyasını **asla** commit etmeyin (`.gitignore`’da).
-
-**2. Render Blueprint**
+**3. Render Blueprint**
 
 1. [render.com](https://render.com) → **New +** → **Blueprint**
-2. GitHub repo’yu bağlayın → `render.yaml` otomatik okunur
-3. İstendiğinde girin: `ADMIN_PASSWORD`, `ADMIN_PHONE` (ve isteğe bağlı VAPID)
-4. **Apply** — PostgreSQL + Web Service + kalıcı disk oluşturulur
+2. Repo: `lotus-guzellik-salonu` → `render.yaml` okunur
+3. Sadece **lotus-web** oluşur (PostgreSQL servisi yok — tasarruf)
+4. Girin:
 
-**3. İlk deploy sonrası**
+| Alan | Değer |
+|------|--------|
+| `DATABASE_URL` | Neon **Pooled** connection string |
+| `DIRECT_URL` | Neon **Direct** connection string |
+| `ADMIN_PASSWORD` | Canlı admin şifresi |
+| `ADMIN_PHONE` | `05323943686` |
+
+5. **Apply** (~$7/ay onay ekranı)
+
+**4. İlk deploy sonrası**
 
 - Site: `https://lotus-web-xxxx.onrender.com`
-- Admin: `/admin/giris` (`.env.example` / Render env’deki telefon + şifre)
-- Boş veritabanı otomatik seed edilir (`prod-setup`)
-- Galeri/yorum yüklemeleri disk üzerinde kalır (`public/uploads`)
+- Admin: `/admin/giris`
+- Boş Neon DB otomatik seed edilir
+- Galeri yüklemeleri Render disk’te kalır
 
-**4. Sonraki deploylar**
+**5. Sonraki deploylar**
 
-`main` branch’e push → Render otomatik build + deploy. Admin düzenlemeleri korunur (seed atlanır).
+`main`’e push → otomatik deploy. Admin düzenlemeleri korunur.
 
-| Render ayarı | Değer |
-|--------------|--------|
+| Ayar | Değer |
+|------|--------|
 | Build | `npm ci && npm run build` |
 | Start | `npm run start:render` |
-| Disk | `/opt/render/project/src/public/uploads` (1 GB) |
+| Disk | `public/uploads` (1 GB) |
 | Bölge | Frankfurt |
-| Node | 20 |
 
-Özel domain: Web Service → **Custom Domains** → DNS CNAME.
+Özel domain: **lotus-web** → **Custom Domains** → DNS CNAME.
 
 ### Deploy kontrol listesi
 

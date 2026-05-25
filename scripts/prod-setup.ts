@@ -8,6 +8,7 @@ import { execSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
+import { ensureAdminUser } from "./ensure-admin.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -38,6 +39,8 @@ async function main() {
 
   const prisma = new PrismaClient();
   try {
+    await ensureAdminUser(prisma);
+
     const serviceCount = await prisma.service.count();
     const runSeed =
       process.env.RUN_SEED === "true" ||

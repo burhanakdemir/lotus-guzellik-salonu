@@ -22,7 +22,13 @@ async function main() {
 
   await prisma.user.upsert({
     where: { phone: adminPhone },
-    update: { role: "ADMIN" },
+    update: {
+      role: "ADMIN",
+      passwordHash,
+      name: process.env.ADMIN_NAME || "Lotus Admin",
+      email: process.env.ADMIN_EMAIL || "admin@lotusguzellik.com",
+      isActive: true,
+    },
     create: {
       name: process.env.ADMIN_NAME || "Lotus Admin",
       phone: adminPhone,

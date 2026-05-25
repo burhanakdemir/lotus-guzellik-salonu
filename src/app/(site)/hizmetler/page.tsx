@@ -28,7 +28,7 @@ export default async function HizmetlerPage() {
       <section className="services-page-hero relative overflow-hidden bg-gradient-to-br from-lotus-800 via-lotus-700 to-lotus-600 px-4 text-center text-white">
         <div className="hero-pattern absolute inset-0" />
         <div className="relative mx-auto max-w-3xl">
-          <h1 className="font-display text-3xl font-light md:text-4xl">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-white drop-shadow-sm md:text-4xl md:font-bold">
             Hizmetlerimiz
           </h1>
           <p className="mt-1 text-xs text-rose-100/90 md:text-sm">

@@ -182,12 +182,38 @@ export function ServicesAdmin({
   }
 
   async function uploadImage(id: string, slug: string, file: File) {
+    if (file.size > 8 * 1024 * 1024) {
+      alert("Dosya en fazla 8 MB olabilir.");
+      return;
+    }
     const fd = new FormData();
     fd.append("file", file);
     fd.append("slug", slug);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-    const data = await res.json();
-    if (data.imageUrl) await updateService(id, { imageUrl: data.imageUrl });
+    try {
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Görsel yüklenemedi.");
+        return;
+      }
+      if (!data.imageUrl) {
+        alert("Sunucu görsel adresi döndürmedi.");
+        return;
+      }
+      const patch = await fetch(`/api/admin/services/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: data.imageUrl }),
+      });
+      if (!patch.ok) {
+        const err = await patch.json().catch(() => ({}));
+        alert((err as { error?: string }).error || "Veritabanına kaydedilemedi.");
+        return;
+      }
+      await refresh();
+    } catch {
+      alert("Yükleme sırasında bağlantı hatası.");
+    }
   }
 
   return (

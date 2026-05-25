@@ -40,6 +40,7 @@ export function AdminServiceThumb({
       }}
     >
       <Image
+        key={src}
         src={src}
         alt={alt}
         width={W}

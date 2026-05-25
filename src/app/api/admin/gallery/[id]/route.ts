@@ -18,8 +18,14 @@ const patchSchema = z.object({
 });
 
 async function deleteMediaFile(mediaUrl: string) {
-  if (!mediaUrl.startsWith("/uploads/gallery/")) return;
-  const filePath = path.join(process.cwd(), "public", mediaUrl);
+  const { getUploadSubdir } = await import("@/lib/uploads");
+  const prefixUploads = "/uploads/gallery/";
+  const prefixApi = "/api/files/gallery/";
+  let rel: string | null = null;
+  if (mediaUrl.startsWith(prefixUploads)) rel = mediaUrl.slice(prefixUploads.length);
+  else if (mediaUrl.startsWith(prefixApi)) rel = mediaUrl.slice(prefixApi.length);
+  if (!rel) return;
+  const filePath = path.join(getUploadSubdir("gallery"), rel);
   await unlink(filePath).catch(() => {});
 }
 
@@ -60,7 +66,8 @@ export async function PATCH(
       await deleteMediaFile(existing.mediaUrl);
       const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
       const filename = `${id}.${ext}`;
-      const uploadDir = path.join(process.cwd(), "public", "uploads", "gallery");
+      const { getUploadSubdir, uploadPublicUrl } = await import("@/lib/uploads");
+      const uploadDir = getUploadSubdir("gallery");
       await mkdir(uploadDir, { recursive: true });
       await writeFile(
         path.join(uploadDir, filename),
@@ -73,7 +80,7 @@ export async function PATCH(
       const updated = await prisma.galleryItem.update({
         where: { id },
         data: {
-          mediaUrl: `/uploads/gallery/${filename}`,
+          mediaUrl: uploadPublicUrl("gallery", filename),
           mediaType,
           ...(typeof title === "string" && title.trim().length >= 2
             ? { title: title.trim() }

@@ -1,5 +1,6 @@
 import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
+import { getUploadSubdir, uploadPublicUrl } from "./uploads";
 import {
   isReviewImageFile,
   MEMBER_MAX_REVIEW_IMAGES,
@@ -14,7 +15,7 @@ export {
 } from "./review-display";
 
 export async function saveReviewImages(reviewId: string, files: File[]): Promise<string[]> {
-  const uploadDir = path.join(process.cwd(), "public", "uploads", "reviews");
+  const uploadDir = getUploadSubdir("reviews");
   await mkdir(uploadDir, { recursive: true });
 
   const urls: string[] = [];
@@ -27,14 +28,25 @@ export async function saveReviewImages(reviewId: string, files: File[]): Promise
       path.join(uploadDir, filename),
       Buffer.from(await file.arrayBuffer())
     );
-    urls.push(`/uploads/reviews/${filename}`);
+    urls.push(uploadPublicUrl("reviews", filename));
   }
   return urls;
 }
 
+function reviewImageDiskPath(imageUrl: string): string | null {
+  const prefixUploads = "/uploads/reviews/";
+  const prefixApi = "/api/files/reviews/";
+  let rel: string | null = null;
+  if (imageUrl.startsWith(prefixUploads)) rel = imageUrl.slice(prefixUploads.length);
+  else if (imageUrl.startsWith(prefixApi)) rel = imageUrl.slice(prefixApi.length);
+  if (!rel) return null;
+  return path.join(getUploadSubdir("reviews"), rel);
+}
+
 export async function deleteReviewImage(imageUrl: string | null | undefined): Promise<void> {
-  if (!imageUrl?.startsWith("/uploads/reviews/")) return;
-  const filePath = path.join(process.cwd(), "public", imageUrl);
+  if (!imageUrl) return;
+  const filePath = reviewImageDiskPath(imageUrl);
+  if (!filePath) return;
   await unlink(filePath).catch(() => {});
 }
 

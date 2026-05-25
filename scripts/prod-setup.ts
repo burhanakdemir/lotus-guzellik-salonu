@@ -10,6 +10,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
 import { ensureAdminUser } from "./ensure-admin";
+import { isUploadRootWritable } from "../src/lib/uploads";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -31,6 +32,14 @@ async function main() {
   console.log("→ Deploy kilidi: hizmet/görsel listesi deploy sırasında değiştirilmez.");
 
   run("node scripts/ensure-dirs.mjs", "Klasörler");
+  const uploadOk = await isUploadRootWritable();
+  if (uploadOk) {
+    console.log("→ Yükleme diskine yazılabiliyor (admin görselleri kalıcı).");
+  } else {
+    console.warn(
+      "⚠ Yükleme klasörüne yazılamıyor — Render disk mount (public/uploads) kontrol edin."
+    );
+  }
   run("npx tsx scripts/ensure-images.ts", "Statik görseller doğrula (sabit, indirme yok)", {
     ...process.env,
     DEPLOY_LOCK_IMAGES: "true",

@@ -1,3 +1,5 @@
+import { resolveUploadPublicUrl } from "./uploads";
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -43,7 +45,12 @@ export function formatPhoneDisplay(phone: string): string {
 }
 
 export function serviceImageUrl(slug: string, imageUrl?: string | null): string {
-  if (imageUrl) return imageUrl.startsWith("/") ? imageUrl : `/uploads/services/${imageUrl}`;
+  if (imageUrl) {
+    if (imageUrl.startsWith("/uploads/") || imageUrl.startsWith("/api/files/")) {
+      return resolveUploadPublicUrl(imageUrl);
+    }
+    return imageUrl.startsWith("/") ? imageUrl : resolveUploadPublicUrl(imageUrl);
+  }
   return `/services/${slug}.jpg`;
 }
 
@@ -64,7 +71,10 @@ export function serviceImageFallbackUrl(slug: string): string {
 
 export function promotionBannerUrl(bannerUrl?: string | null): string {
   if (bannerUrl) {
-    return bannerUrl.startsWith("/") ? bannerUrl : `/uploads/promotions/${bannerUrl}`;
+    if (bannerUrl.startsWith("/uploads/") || bannerUrl.startsWith("/api/files/")) {
+      return resolveUploadPublicUrl(bannerUrl);
+    }
+    return bannerUrl.startsWith("/") ? bannerUrl : `/api/files/promotions/${bannerUrl}`;
   }
   return "/promo-placeholder.svg";
 }

@@ -1,3 +1,5 @@
+import { resolveUploadPublicUrl } from "./uploads";
+
 export type GalleryMediaType = "IMAGE" | "VIDEO";
 
 const IMAGE_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
@@ -5,7 +7,10 @@ const VIDEO_EXT = new Set(["mp4", "webm", "mov", "m4v"]);
 
 export function galleryMediaUrl(mediaUrl: string): string {
   if (mediaUrl.startsWith("/") || mediaUrl.startsWith("http")) return mediaUrl;
-  return `/uploads/gallery/${mediaUrl}`;
+  if (mediaUrl.startsWith("/uploads/") || mediaUrl.startsWith("/api/files/")) {
+    return resolveUploadPublicUrl(mediaUrl);
+  }
+  return `/api/files/gallery/${mediaUrl}`;
 }
 
 export function mediaTypeFromFilename(filename: string): GalleryMediaType | null {

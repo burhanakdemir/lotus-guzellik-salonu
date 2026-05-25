@@ -75,12 +75,13 @@ export async function POST(req: Request) {
 
     const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
     const filename = `${item.id}.${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "gallery");
+    const { getUploadSubdir, uploadPublicUrl } = await import("@/lib/uploads");
+    const uploadDir = getUploadSubdir("gallery");
     await mkdir(uploadDir, { recursive: true });
     const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(path.join(uploadDir, filename), buffer);
 
-    const mediaUrl = `/uploads/gallery/${filename}`;
+    const mediaUrl = uploadPublicUrl("gallery", filename);
     const updated = await prisma.galleryItem.update({
       where: { id: item.id },
       data: { mediaUrl },

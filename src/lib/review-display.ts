@@ -10,10 +10,16 @@ export function isReviewImageFile(file: File): boolean {
   return IMAGE_EXT.has(ext);
 }
 
+import { resolveUploadPublicUrl } from "./uploads";
+
 export function reviewImageUrl(imageUrl: string | null | undefined): string | null {
   if (!imageUrl) return null;
-  if (imageUrl.startsWith("/") || imageUrl.startsWith("http")) return imageUrl;
-  return `/uploads/reviews/${imageUrl}`;
+  if (imageUrl.startsWith("http")) return imageUrl;
+  if (imageUrl.startsWith("/uploads/") || imageUrl.startsWith("/api/files/")) {
+    return resolveUploadPublicUrl(imageUrl);
+  }
+  if (imageUrl.startsWith("/")) return imageUrl;
+  return resolveUploadPublicUrl(imageUrl);
 }
 
 export function reviewImageUrls(imageUrls: string[] | null | undefined): string[] {

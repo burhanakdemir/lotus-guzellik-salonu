@@ -8,7 +8,7 @@ import { execSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
-import { ensureAdminUser } from "./ensure-admin.ts";
+import { ensureAdminUser } from "./ensure-admin";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 

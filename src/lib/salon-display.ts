@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { safeDbQuery } from "@/lib/db-safe";
+import { DEFAULT_SALON_SETTINGS, safeDbQuery } from "@/lib/db-safe";
 
 export type SalonDisplaySettings = {
   showPrice: boolean;
@@ -15,8 +15,9 @@ export async function getSalonDisplaySettings(): Promise<SalonDisplaySettings> {
       }),
     null
   );
+  const fallback = DEFAULT_SALON_SETTINGS;
   return {
-    showPrice: settings?.showServicePrice ?? true,
-    showDuration: settings?.showServiceDuration ?? true,
+    showPrice: settings?.showServicePrice ?? fallback.showServicePrice,
+    showDuration: settings?.showServiceDuration ?? fallback.showServiceDuration,
   };
 }

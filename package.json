@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/dev.mjs",
     "dev:clean": "node scripts/dev-clean.mjs",
+    "doctor": "node scripts/doctor.mjs",
     "prebuild": "node scripts/ensure-dirs.mjs && npx tsx scripts/ensure-images.ts",
-    "build": "next build",
+    "build": "node scripts/build-safe.mjs",
     "start": "next start",
     "start:prod": "npx tsx scripts/prod-setup.ts && next start",
     "start:render": "npx tsx scripts/prod-setup.ts && next start -H 0.0.0.0",

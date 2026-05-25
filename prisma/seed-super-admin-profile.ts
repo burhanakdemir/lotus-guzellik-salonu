@@ -13,7 +13,7 @@ export async function seedSuperAdminStaffProfile(prisma: PrismaClient) {
   const label =
     process.env.SUPER_ADMIN_PANEL_NAME?.trim() ||
     process.env.ADMIN_NAME?.trim() ||
-    "Neşe Akdemir";
+    "Neşe AKDEMİR";
 
   const admin = await prisma.user.findFirst({
     where: {

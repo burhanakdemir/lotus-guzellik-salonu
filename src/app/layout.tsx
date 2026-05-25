@@ -22,6 +22,12 @@ export const metadata: Metadata = {
     "Antalya Kepez'de premium kuaför ve güzellik hizmetleri. Online randevu, saç, cilt, makyaj, gelin paketi ve daha fazlası.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

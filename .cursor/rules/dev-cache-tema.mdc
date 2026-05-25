@@ -1,0 +1,29 @@
+# Tema / CSS bozulması (.next önbellek)
+
+## Neden olur
+
+`npm run dev` ve `npm run build` **aynı `.next` klasörünü** kullanır. İkisi aynı anda veya arka arkaya karışınca Tailwind/CSS chunk'ları bozulur → sayfa düz HTML (stilsiz) görünür.
+
+## Kullanıcı "tema bozuldu" derse
+
+1. Çalışan tüm `next dev` / terminal süreçlerini kapat.
+2. Terminalde: **`npm run dev:clean`**
+3. Tarayıcıda **Ctrl+F5** (sert yenileme).
+
+Teşhis: `npm run doctor`
+
+## Kurallar (agent)
+
+- Kullanıcıya **`npm run dev`** öner (artık önbellek modu kontrolü var); stilsiz sayfa için **`npm run dev:clean`**.
+- **`npm run build` açıkken `npm run dev` başlatma** — build script dev süreçlerini durdurur ama paralel çalıştırma yine riskli.
+- Build sonrası yerel test için **`npm run start`**, tekrar geliştirme için **`npm run dev`** veya **`dev:clean`**.
+- Tema dosyalarını (`globals.css`, `layout.tsx`) gereksiz yere değiştirme; sorun çoğunlukla önbellektir.
+
+## Scriptler
+
+| Komut | Açıklama |
+|-------|----------|
+| `npm run dev` | Mod uyumsuzsa `.next` temizler, sonra `next dev` |
+| `npm run build` | Dev'i durdurur, mod temizler, `next build` |
+| `npm run dev:clean` | Port kill + `.next` sil + prisma generate + dev |
+| `npm run doctor` | Önbellek modu + localhost CSS link kontrolü |

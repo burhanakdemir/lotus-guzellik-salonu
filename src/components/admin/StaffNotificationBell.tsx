@@ -93,7 +93,7 @@ export function StaffNotificationBell() {
     <div className="staff-notif-bell" ref={panelRef}>
       <button
         type="button"
-        className="staff-notif-bell__btn"
+        className="staff-notif-bell__btn admin-nav__btn"
         aria-label="Bildirimler"
         onClick={() => {
           setOpen((v) => !v);

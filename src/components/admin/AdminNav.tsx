@@ -26,6 +26,7 @@ type AdminNavProps = {
     role: "ADMIN" | "STAFF_ADMIN";
     isMultiAdmin: boolean;
     showNotifications?: boolean;
+    displayName: string;
   } | null;
 };
 
@@ -39,8 +40,8 @@ export function AdminNav({ session }: AdminNavProps) {
 
   return (
     <nav className="admin-nav" aria-label="Admin menü">
-      <span className="admin-nav__brand">
-        {isStaff ? "Usta" : "Admin"}
+      <span className="admin-nav__brand" title={session?.displayName}>
+        {session?.displayName ?? ""}
       </span>
       <div className="admin-nav__links">
         {links.map((l) => {
@@ -51,7 +52,9 @@ export function AdminNav({ session }: AdminNavProps) {
               key={l.href}
               href={l.href}
               className={
-                active ? "admin-nav__link admin-nav__link--active" : "admin-nav__link"
+                active
+                  ? "admin-nav__btn admin-nav__btn--active"
+                  : "admin-nav__btn"
               }
             >
               {l.label}
@@ -59,10 +62,12 @@ export function AdminNav({ session }: AdminNavProps) {
           );
         })}
       </div>
-      {session?.showNotifications && <StaffNotificationBell />}
-      <Link href="/" className="admin-nav__site">
-        ← Site
-      </Link>
+      <div className="admin-nav__actions">
+        {session?.showNotifications && <StaffNotificationBell />}
+        <Link href="/" className="admin-nav__btn">
+          Ana Sayfa
+        </Link>
+      </div>
     </nav>
   );
 }

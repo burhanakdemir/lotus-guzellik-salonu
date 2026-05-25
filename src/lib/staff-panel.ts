@@ -1,9 +1,12 @@
+/** Süper admin — panel, randevu ve üst menüde görünen ad */
+export const SUPER_ADMIN_DISPLAY_NAME = "Neşe AKDEMİR";
+
 /** Randevu paneli ve online randevuda süper adminin görünen adı */
 export function getSuperAdminPanelName(): string {
   return (
     process.env.SUPER_ADMIN_PANEL_NAME?.trim() ||
     process.env.ADMIN_NAME?.trim() ||
-    "Neşe Akdemir"
+    SUPER_ADMIN_DISPLAY_NAME
   );
 }
 

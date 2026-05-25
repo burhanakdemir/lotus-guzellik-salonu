@@ -13,7 +13,7 @@ export async function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-lotus-200/70 bg-white/85 shadow-sm shadow-lotus-600/5 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
-        <Link href="/" className="group flex items-center gap-3">
+        <Link href="/" className="group flex min-w-0 shrink items-center gap-2 sm:gap-3">
           <Image
             src="/logo/lotus-sade.png"
             alt="Lotus Kuaför & Güzellik Salonu"
@@ -31,20 +31,20 @@ export async function Header() {
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-4 text-sm font-medium text-lotus-800/80 md:flex lg:gap-5">
-          <Link href="/" className="transition hover:text-lotus-600">
+        <nav className="hidden items-center gap-4 text-sm md:flex lg:gap-5">
+          <Link href="/" className="header-nav-link transition">
             Ana Sayfa
           </Link>
-          <Link href="/hizmetler" className="transition hover:text-lotus-600">
+          <Link href="/hizmetler" className="header-nav-link transition">
             Hizmetler
           </Link>
-          <Link href="/hakkimizda" className="transition hover:text-lotus-600">
+          <Link href="/hakkimizda" className="header-nav-link transition">
             Hakkımızda
           </Link>
-          <Link href="/galeri" className="transition hover:text-lotus-600">
+          <Link href="/galeri" className="header-nav-link transition">
             Galeri
           </Link>
-          <Link href="/yorumlar" className="transition hover:text-lotus-600">
+          <Link href="/yorumlar" className="header-nav-link transition">
             Yorumlar
           </Link>
           <Link href="/randevu" className={headerBtn}>
@@ -97,14 +97,32 @@ export async function Header() {
         </div>
       </div>
 
-      <nav className="flex justify-center gap-6 border-t border-lotus-100 px-4 py-2.5 text-xs font-medium text-lotus-700/70 md:hidden">
-        <Link href="/hizmetler" className="hover:text-lotus-600">Hizmetler</Link>
-        <Link href="/randevu" className="font-semibold text-lotus-600">Randevu</Link>
-        <Link href="/hakkimizda" className="hover:text-lotus-600">Hakkımızda</Link>
-        <Link href="/galeri" className="hover:text-lotus-600">Galeri</Link>
-        <Link href="/yorumlar" className="hover:text-lotus-600">Yorumlar</Link>
-        <Link href="/admin/giris" className="font-semibold text-lotus-600">
-          Usta Girişi
+      <nav
+        className="header-mobile-nav border-t border-lotus-100 px-3 py-2.5 md:hidden"
+        aria-label="Mobil menü"
+      >
+        <Link href="/" className="header-mobile-nav__link">
+          Ana Sayfa
+        </Link>
+        <Link href="/hizmetler" className="header-mobile-nav__link">
+          Hizmetler
+        </Link>
+        <Link href="/randevu" className="header-mobile-nav__link header-mobile-nav__link--accent">
+          Randevu
+        </Link>
+        <Link href="/galeri" className="header-mobile-nav__link">
+          Galeri
+        </Link>
+        <Link href="/yorumlar" className="header-mobile-nav__link">
+          Yorumlar
+        </Link>
+        {!session && (
+          <Link href="/giris" className="header-mobile-nav__link">
+            Giriş
+          </Link>
+        )}
+        <Link href="/admin/giris" className="header-mobile-nav__link">
+          Usta
         </Link>
       </nav>
     </header>

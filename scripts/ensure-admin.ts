@@ -28,12 +28,12 @@ export async function ensureAdminUser(prisma: PrismaClient): Promise<void> {
     update: {
       role: "ADMIN",
       passwordHash,
-      name: process.env.ADMIN_NAME || "Lotus Admin",
+      name: process.env.ADMIN_NAME || "Neşe AKDEMİR",
       email: process.env.ADMIN_EMAIL || "admin@lotusguzellik.com",
       isActive: true,
     },
     create: {
-      name: process.env.ADMIN_NAME || "Lotus Admin",
+      name: process.env.ADMIN_NAME || "Neşe AKDEMİR",
       phone: adminPhone,
       email: process.env.ADMIN_EMAIL || "admin@lotusguzellik.com",
       passwordHash,

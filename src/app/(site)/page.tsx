@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSalonSettingsSafe, safeDbQuery } from "@/lib/db-safe";
+import { getSalonDisplaySettings } from "@/lib/salon-display";
 import { ServiceCard } from "@/components/ServiceCard";
 import { HeroShowcaseGrid } from "@/components/HeroShowcaseGrid";
 import { WeeklyPromotions } from "@/components/WeeklyPromotions";
@@ -9,8 +10,9 @@ import { servicesCatalog } from "../../../prisma/services-catalog";
 
 export default async function HomePage() {
   const now = new Date();
-  const [settings, featured, promotions, serviceCount] = await Promise.all([
+  const [settings, display, featured, promotions, serviceCount] = await Promise.all([
     getSalonSettingsSafe(),
+    getSalonDisplaySettings(),
     safeDbQuery(
       () =>
         prisma.service.findMany({
@@ -43,7 +45,7 @@ export default async function HomePage() {
   return (
     <div>
       {/* Hero — kompakt, lotus gradient */}
-      <section className="relative min-h-[420px] overflow-hidden md:min-h-[460px]">
+      <section className="relative overflow-hidden">
         <Image
           src="/hero-bg.svg"
           alt=""
@@ -55,28 +57,33 @@ export default async function HomePage() {
         <div className="hero-pattern absolute inset-0 opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-br from-lotus-700 via-lotus-800 to-lotus-900" />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-4 pt-4 pb-8 md:pt-5 md:pb-10 lg:px-8 lg:pt-6 lg:pb-12">
-          <h1 className="font-display text-3xl font-light leading-tight text-white md:text-4xl lg:text-5xl">
-            {settings?.heroTitle}
-          </h1>
-          <p className="mt-3 max-w-xl text-base leading-snug text-lotus-100/95 md:text-lg">
-            {settings?.heroSubtitle}
-          </p>
+        <div className="hero-inner relative z-10 mx-auto max-w-7xl px-4 lg:px-8">
+          <div className="hero-head">
+            <h1 className="hero-head__title font-display text-3xl font-light leading-tight text-white md:text-4xl lg:text-5xl">
+              {settings?.heroTitle}
+            </h1>
 
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-3">
-              <Link href="/randevu" className="btn-gold">
-                Randevu Al
-              </Link>
-              <Link href="/uye-ol" className="btn-gold">
-                Üye Ol
-              </Link>
+            <div className="hero-highlights">
+              <h2 className="hero-highlights__title">Neden LOTUS?</h2>
+              <ul className="hero-highlights__list">
+                {[
+                  "Profesyonel ve deneyimli güzellik ekibi",
+                  "Hijyenik, modern ve konforlu salon ortamı",
+                  "Online randevu — üye olmadan da kolayca",
+                  "Üyelere özel indirim ve kampanyalar",
+                ].map((item) => (
+                  <li key={item} className="hero-highlights__item">
+                    <span className="hero-highlights__icon" aria-hidden>
+                      ✓
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <p className="hero-member-pill">
-              <span className="hero-member-pill__icon" aria-hidden>
-                ✓
-              </span>
-              Üyelere özel indirim ve kampanyalar
+
+            <p className="hero-head__subtitle max-w-xl text-base leading-snug text-lotus-100/95 md:text-lg">
+              {settings?.heroSubtitle}
             </p>
           </div>
 
@@ -109,7 +116,13 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl bg-cream px-4 py-12 lg:px-8">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((s) => (
-              <ServiceCard key={s.id} {...s} compact />
+              <ServiceCard
+                key={s.id}
+                {...s}
+                compact
+                showPrice={display.showPrice}
+                showDuration={display.showDuration}
+              />
             ))}
           </div>
           <div className="mt-10 text-center">

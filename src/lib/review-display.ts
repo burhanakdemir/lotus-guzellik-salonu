@@ -10,7 +10,7 @@ export function isReviewImageFile(file: File): boolean {
   return IMAGE_EXT.has(ext);
 }
 
-import { resolveUploadPublicUrl } from "./uploads";
+import { resolveUploadPublicUrl } from "./upload-urls";
 
 export function reviewImageUrl(imageUrl: string | null | undefined): string | null {
   if (!imageUrl) return null;

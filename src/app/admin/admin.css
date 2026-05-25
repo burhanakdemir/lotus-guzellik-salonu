@@ -1,11 +1,247 @@
-/* Admin panel — kompakt görünüm */
+/* Admin panel — Tailwind’e bağımlı olmadan tam stil (önbellek bozulunca da çalışır) */
+:root {
+  --color-lotus-50: #fff9fb;
+  --color-lotus-700: #a84868;
+  --color-lotus-800: #8e4462;
+  --color-lotus-900: #6b3349;
+  --color-gold: #e8c547;
+  --color-gold-dark: #c9a03a;
+}
+
 body:has(.admin-shell) {
   background: #f3f4f6 !important;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 .admin-shell {
+  min-height: 100vh;
+  background: #f3f4f6;
   font-size: 12px;
   line-height: 1.35;
+  color: #1f2937;
+}
+
+.admin-shell__content {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding: 0.75rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .admin-shell__content {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Üst menü */
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 0.35rem 0.5rem;
+}
+
+.admin-nav__brand {
+  margin-right: 0.25rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-lotus-700);
+}
+
+.admin-nav__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.admin-nav__link {
+  border-radius: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 11px;
+  font-weight: 500;
+  color: #4b5563;
+  text-decoration: none;
+}
+
+.admin-nav__link:hover {
+  background: var(--color-lotus-50);
+  color: var(--color-lotus-800);
+}
+
+.admin-nav__link--active {
+  background: var(--color-lotus-700);
+  color: #fff;
+}
+
+.admin-nav__link--active:hover {
+  background: var(--color-lotus-800);
+  color: #fff;
+}
+
+.admin-nav__site {
+  margin-left: auto;
+  font-size: 10px;
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.admin-nav__site:hover {
+  color: var(--color-lotus-700);
+}
+
+/* Özet istatistik kartları */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.375rem;
+}
+
+@media (min-width: 640px) {
+  .admin-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .admin-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.admin-stat-card__label {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.admin-stat-card__value {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.admin-stat-card__value--amber {
+  color: #b45309;
+}
+
+.admin-stat-card__value--lotus {
+  color: var(--color-lotus-700);
+}
+
+.admin-section-mt {
+  margin-top: 0.5rem;
+}
+
+.admin-promo-card {
+  margin-top: 0.5rem;
+  border-left: 2px solid var(--color-gold);
+}
+
+.admin-promo-card__title {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.admin-link {
+  font-size: 10px;
+  color: var(--color-lotus-700);
+  text-decoration: none;
+}
+
+.admin-link:hover {
+  text-decoration: underline;
+}
+
+/* Usta sekmeleri (özet / randevu) */
+.admin-staff-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.admin-staff-tabs__label {
+  margin-right: 0.25rem;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.admin-staff-tabs__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 11px;
+  font-weight: 500;
+  background: #f3f4f6;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.admin-staff-tabs__btn:hover {
+  background: var(--color-lotus-50);
+  color: var(--color-lotus-800);
+}
+
+.admin-staff-tabs__btn--active {
+  background: var(--color-lotus-700);
+  color: #fff;
+}
+
+.admin-staff-tabs__btn--active:hover {
+  background: var(--color-lotus-800);
+  color: #fff;
+}
+
+.admin-staff-tabs__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+}
+
+.admin-staff-tabs__count {
+  margin-left: 0.2rem;
+  border-radius: 9999px;
+  background: #f59e0b;
+  padding: 0 0.25rem;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.admin-staff-panel-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-lotus-900);
+}
+
+.admin-staff-panel-hint {
+  margin: -0.25rem 0 0.5rem;
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.admin-dashboard-stack > * + * {
+  margin-top: 0.5rem;
 }
 
 .admin-giris-only {
@@ -39,7 +275,95 @@ body:has(.admin-shell) {
 .admin-shell .card {
   padding: 0.5rem 0.625rem;
   border-radius: 0.375rem;
-  box-shadow: none;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.admin-shell .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(to right, #a84868, #6b3349);
+  color: #fff;
+  font-weight: 600;
+}
+
+.admin-shell .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #e8a0b4;
+  color: #6b3349;
+  font-weight: 600;
+}
+
+.admin-shell .grid {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.admin-shell .grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .admin-shell .sm\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.admin-shell .text-lg {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+}
+
+.admin-shell .text-\[10px\] {
+  font-size: 10px;
+}
+
+.admin-shell .text-gray-500 {
+  color: #6b7280;
+}
+
+.admin-shell .text-amber-700 {
+  color: #b45309;
+}
+
+.admin-shell .text-lotus-600 {
+  color: #c25b7d;
+}
+
+.admin-shell .text-lotus-700 {
+  color: #a84868;
+}
+
+.admin-shell .text-gold-dark {
+  color: #c9a03a;
+}
+
+.admin-shell .font-bold {
+  font-weight: 700;
+}
+
+.admin-shell .font-medium {
+  font-weight: 500;
+}
+
+.admin-shell .mt-2 {
+  margin-top: 0.5rem;
+}
+
+.admin-shell .border-l-2 {
+  border-left-width: 2px;
+}
+
+.admin-shell .border-gold {
+  border-color: #e8c547;
 }
 
 .admin-shell .input {
@@ -203,6 +527,77 @@ body:has(.admin-shell) {
   font-size: 9px;
   color: #6b7280;
   padding: 0 2px;
+}
+
+.apt-approval-summary {
+  display: grid;
+  gap: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .apt-approval-summary {
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+  }
+
+  .apt-approval-summary .apt-calendar__slot-grid {
+    max-height: 22rem;
+    overflow-y: auto;
+  }
+}
+
+.apt-approval-summary__list {
+  scrollbar-width: thin;
+}
+
+.staff-notif-bell {
+  position: relative;
+  margin-left: 0.35rem;
+}
+
+.staff-notif-bell__btn {
+  position: relative;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 11px;
+  background: transparent;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.staff-notif-bell__btn:hover {
+  background: var(--color-lotus-50);
+}
+
+.staff-notif-bell__badge {
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  display: flex;
+  min-width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: #dc2626;
+  padding: 0 2px;
+  font-size: 8px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.staff-notif-bell__panel {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 50;
+  margin-top: 0.25rem;
+  width: 18rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  background: #fff;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+  font-family: inherit;
 }
 
 .apt-chip {

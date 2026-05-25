@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { groupServicesByCategory } from "@/lib/group-services-by-category";
 import { getServiceCategoryLabel } from "@/lib/service-categories";
-import { formatPrice, normalizePhone } from "@/lib/utils";
+import { normalizePhone } from "@/lib/phone";
+import { formatPrice } from "@/lib/utils";
 
 interface Service {
   id: string;
@@ -264,7 +265,8 @@ export function RandevuForm({
           </li>
         </ul>
         <p className="mt-6 text-xs text-gray-500">
-          Onay için sizinle iletişime geçilecektir.
+          Randevunuz usta onayı bekliyor. Onaylandığında bilgilendirileceksiniz;
+          onaylanana kadar saat rezerve edilmiş sayılır.
         </p>
       </div>
     );

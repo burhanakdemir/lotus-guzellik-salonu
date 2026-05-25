@@ -11,18 +11,19 @@ export default async function AdminLayout({
   const session = await getSession();
 
   return (
-    <div className="admin-shell min-h-screen bg-gray-100">
+    <div className="admin-shell">
       <AdminNav
         session={
           session && isAdminSession(session)
             ? {
                 role: session.role as "ADMIN" | "STAFF_ADMIN",
                 isMultiAdmin: isMultiAdminEnabled(),
+                showNotifications: true,
               }
             : null
         }
       />
-      <div className="admin-shell__content mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+      <div className="admin-shell__content">
         {children}
       </div>
     </div>

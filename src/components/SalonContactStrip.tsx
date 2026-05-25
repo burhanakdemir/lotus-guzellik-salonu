@@ -1,6 +1,6 @@
 import { LotusLogo } from "@/components/LotusLogo";
 import { getSalonSettingsSafe } from "@/lib/db-safe";
-import { whatsappUrl } from "@/lib/utils";
+import { whatsappUrl } from "@/lib/phone";
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (

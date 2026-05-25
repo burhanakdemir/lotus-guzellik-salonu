@@ -5,6 +5,7 @@ import {
   actorFromSession,
   assertCanEditAppointment,
 } from "@/lib/admin-permissions";
+import { approveAppointment } from "@/lib/appointment-approval";
 import { requireAppointmentAccess } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/staff-admin";
@@ -38,7 +39,41 @@ export async function PATCH(
       assignedStaffId?: string | null;
     } = {};
 
-    if (data.status !== undefined) updateData.status = data.status;
+    if (data.status !== undefined) {
+      if (
+        data.status === "CONFIRMED" &&
+        existing.status === "PENDING"
+      ) {
+        const result = await approveAppointment(
+          id,
+          session.id,
+          actorFromSession(session)
+        );
+        if (result.error) {
+          return NextResponse.json({ error: result.error }, { status: 403 });
+        }
+      } else if (
+        !isSuperAdmin(session.role) &&
+        data.status === "CONFIRMED" &&
+        existing.status !== "CONFIRMED"
+      ) {
+        return NextResponse.json(
+          { error: "Onay için «Randevu Onayla» kullanın." },
+          { status: 400 }
+        );
+      } else {
+        updateData.status = data.status;
+        if (data.status === "CONFIRMED" && !existing.staffApprovedAt) {
+          (updateData as typeof updateData & {
+            staffApprovedAt?: Date;
+            staffApprovedByUserId?: string;
+          }).staffApprovedAt = new Date();
+          (updateData as typeof updateData & {
+            staffApprovedByUserId?: string;
+          }).staffApprovedByUserId = session.id;
+        }
+      }
+    }
     if (data.note !== undefined) updateData.note = data.note;
     if (data.assignedStaffId !== undefined && isSuperAdmin(session.role)) {
       updateData.assignedStaffId = data.assignedStaffId;

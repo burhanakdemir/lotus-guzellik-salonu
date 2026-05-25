@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_MEMBER_PASSWORD } from "@/lib/member-constants";
-import { formatPhoneDisplay, formatPrice } from "@/lib/utils";
+import { formatPhoneDisplay } from "@/lib/phone";
+import { formatPrice } from "@/lib/utils";
 
 interface Member {
   id: string;

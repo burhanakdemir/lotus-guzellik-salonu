@@ -60,9 +60,29 @@ model User {
   pushSubscriptions MemberPushSubscription[]
   notificationPreference MemberNotificationPreference?
   staffAdminProfile      StaffAdminProfile?
+  appointmentsApproved   Appointment[]         @relation("AppointmentApprovedBy")
+  staffNotifications     StaffNotification[]
   /// Google Authenticator (TOTP) — yalnızca süper admin (ADMIN)
   totpSecret             String?
   totpEnabledAt          DateTime?
+}
+
+/// Usta / süper admin panel bildirimleri
+model StaffNotification {
+  id            String             @id @default(cuid())
+  staffId       String?
+  staff         StaffAdminProfile? @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointmentId String?
+  title         String
+  body          String
+  link          String?
+  readAt        DateTime?
+  createdAt     DateTime           @default(now())
+
+  @@index([userId, readAt])
+  @@index([staffId, createdAt])
 }
 
 /// Usta profili (max 5 aktif — uygulama katmanında sınırlanır)
@@ -77,8 +97,9 @@ model StaffAdminProfile {
   isActive     Boolean       @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  appointments Appointment[]
-  services     StaffService[]
+  appointments      Appointment[]
+  services          StaffService[]
+  staffNotifications StaffNotification[]
 
   @@index([isActive, sortOrder])
 }
@@ -127,12 +148,17 @@ model Appointment {
   date            String
   startTime       String
   endTime         String
-  status          AppointmentStatus  @default(PENDING)
-  note            String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  status                AppointmentStatus  @default(PENDING)
+  /// Usta veya süper admin onayı
+  staffApprovedAt       DateTime?
+  staffApprovedByUserId String?
+  staffApprovedBy       User?              @relation("AppointmentApprovedBy", fields: [staffApprovedByUserId], references: [id], onDelete: SetNull)
+  note                  String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
   @@index([date, startTime])
+  @@index([status, date])
   @@index([phone, date])
   @@index([assignedStaffId])
 }

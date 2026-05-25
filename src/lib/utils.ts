@@ -1,4 +1,10 @@
-import { resolveUploadPublicUrl } from "./uploads";
+import { resolveUploadPublicUrl } from "./upload-urls";
+export {
+  formatPhoneDisplay,
+  normalizePhone,
+  whatsappUrl,
+} from "./phone";
+export { minutesToTime, timeToMinutes } from "./time-format";
 
 export function slugify(text: string): string {
   return text
@@ -20,28 +26,6 @@ export function formatPrice(price: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(price);
-}
-
-export function normalizePhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("90") && digits.length === 12) return digits.slice(2);
-  if (digits.startsWith("0") && digits.length === 11) return digits.slice(1);
-  return digits;
-}
-
-/** WhatsApp Web / uygulama bağlantısı (wa.me) */
-export function whatsappUrl(phone: string): string {
-  const d = normalizePhone(phone);
-  const intl = d.length === 10 ? `90${d}` : d;
-  return `https://wa.me/${intl}`;
-}
-
-export function formatPhoneDisplay(phone: string): string {
-  const d = normalizePhone(phone);
-  if (d.length === 10) {
-    return `0${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6, 8)} ${d.slice(8)}`;
-  }
-  return phone;
 }
 
 export function serviceImageUrl(slug: string, imageUrl?: string | null): string {
@@ -139,13 +123,3 @@ export function getWorkHoursForDay(
   return { open, close };
 }
 
-export function timeToMinutes(time: string): number {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
-}
-
-export function minutesToTime(mins: number): string {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}

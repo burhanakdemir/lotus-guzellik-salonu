@@ -11,7 +11,9 @@ import { z } from "zod";
 const appointmentInclude = {
   service: true,
   user: true,
-  assignedStaff: { select: { id: true, slug: true, label: true, color: true } },
+  assignedStaff: {
+    select: { id: true, slug: true, label: true, color: true, userId: true },
+  },
 } as const;
 
 export async function GET(req: Request) {
@@ -108,6 +110,11 @@ export async function POST(req: Request) {
         existingUserId: data.userId ?? null,
       });
 
+    const autoConfirm = isSuperAdmin(session.role);
+    const initialStatus = autoConfirm
+      ? data.status || "CONFIRMED"
+      : "PENDING";
+
     const apt = await prisma.appointment.create({
       data: {
         name: data.name.trim(),
@@ -119,10 +126,38 @@ export async function POST(req: Request) {
         startTime: data.startTime,
         endTime,
         note: data.note?.trim() || null,
-        status: data.status || "CONFIRMED",
+        status: initialStatus,
+        ...(autoConfirm && initialStatus === "CONFIRMED"
+          ? {
+              staffApprovedAt: new Date(),
+              staffApprovedByUserId: session.id,
+            }
+          : {}),
       },
       include: appointmentInclude,
     });
+
+    if (initialStatus === "PENDING") {
+      const { notifyStaffOfNewAppointment } = await import("@/lib/staff-notifications");
+      await notifyStaffOfNewAppointment({
+        id: apt.id,
+        name: apt.name,
+        phone: apt.phone,
+        date: apt.date,
+        startTime: apt.startTime,
+        endTime: apt.endTime,
+        assignedStaffId: apt.assignedStaffId,
+        service: { name: apt.service.name },
+        assignedStaff: apt.assignedStaff
+          ? {
+              id: apt.assignedStaff.id,
+              label: apt.assignedStaff.label,
+              userId: apt.assignedStaff.userId,
+            }
+          : null,
+      }).catch(() => {});
+    }
+
     return NextResponse.json({ appointment: apt, memberCreated });
   } catch (e) {
     if (e instanceof AdminUnauthorizedError) {

@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Tüm kaynak dosyaları taransın (admin panel dahil) */
+@source "../components/**/*.{ts,tsx}";
+@source "../app/**/*.{ts,tsx}";
+@source "../lib/**/*.{ts,tsx}";
+
 /* Lotus çiçeği renk paleti */
 @theme {
   --color-lotus-50: #fff9fb;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { minutesToTime } from "@/lib/utils";
+import { minutesToTime } from "@/lib/time-format";
 
 function buildTimeOptions(stepMinutes: number): string[] {
   const options: string[] = [];

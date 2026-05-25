@@ -1,0 +1,40 @@
+import { NextResponse } from "next/server";
+import {
+  AdminForbiddenError,
+  AdminUnauthorizedError,
+  actorFromSession,
+} from "@/lib/admin-permissions";
+import { approveAppointment } from "@/lib/appointment-approval";
+import { requireAppointmentAccess } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export async function POST(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await requireAppointmentAccess();
+    const { id } = await params;
+    const result = await approveAppointment(id, session.id, actorFromSession(session));
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: 403 });
+    }
+    const apt = await prisma.appointment.findUnique({
+      where: { id },
+      include: {
+        service: true,
+        assignedStaff: { select: { id: true, slug: true, label: true, color: true } },
+      },
+    });
+    return NextResponse.json({ appointment: apt });
+  } catch (e) {
+    if (e instanceof AdminUnauthorizedError) {
+      return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+    }
+    if (e instanceof AdminForbiddenError) {
+      return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
+    }
+    console.error("[approve]", e);
+    return NextResponse.json({ error: "Onaylanamadı" }, { status: 400 });
+  }
+}

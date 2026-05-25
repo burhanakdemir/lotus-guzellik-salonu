@@ -1,4 +1,4 @@
-import { resolveUploadPublicUrl } from "./uploads";
+import { resolveUploadPublicUrl } from "./upload-urls";
 
 export type GalleryMediaType = "IMAGE" | "VIDEO";
 

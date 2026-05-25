@@ -5,7 +5,11 @@ export function isPrismaSchemaMismatchError(e: unknown): boolean {
   return (
     msg.includes("totpSecret") ||
     msg.includes("totpEnabledAt") ||
+    msg.includes("staffApprovedAt") ||
+    msg.includes("staffApprovedByUserId") ||
+    msg.includes("StaffNotification") ||
     msg.includes("does not exist") ||
+    msg.includes("P2021") ||
     msg.includes("P2022")
   );
 }

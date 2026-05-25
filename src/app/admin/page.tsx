@@ -1,80 +1,140 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { AdminDashboardPanels } from "@/components/admin/AdminDashboardPanels";
+import { mapAdminAppointments } from "@/lib/admin-appointments-loader";
+import { getSession, isAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { orderStaffProfilesForPanel } from "@/lib/staff-panel";
 import { todayString } from "@/lib/timezone";
+import { isMultiAdminEnabled, isSuperAdmin } from "@/lib/staff-admin";
+import { getSalonDaySchedule } from "@/lib/salon-schedule";
 
 export default async function AdminDashboard() {
+  const session = await getSession();
+  if (!session || !isAdminSession(session)) redirect("/admin/giris");
+
   const today = todayString();
-  const [todayAppointments, memberCount, activePromo, weekAppointments] =
-    await Promise.all([
-      prisma.appointment.findMany({
-        where: { date: today, status: { in: ["PENDING", "CONFIRMED"] } },
-        include: { service: true },
-        orderBy: { startTime: "asc" },
-      }),
-      prisma.user.count({ where: { role: "MEMBER", isActive: true } }),
-      prisma.promotion.findFirst({
-        where: {
-          isActive: true,
-          startDate: { lte: new Date() },
-          endDate: { gte: new Date() },
+  const superAdmin = isSuperAdmin(session.role);
+  const multiAdmin = isMultiAdminEnabled();
+
+  const staffProfiles = multiAdmin
+    ? orderStaffProfilesForPanel(
+        await prisma.staffAdminProfile.findMany({
+          where: { isActive: true },
+          orderBy: { sortOrder: "asc" },
+          select: {
+            id: true,
+            slug: true,
+            label: true,
+            color: true,
+            sortOrder: true,
+          },
+        })
+      )
+    : [];
+
+  const staffFilter =
+    !superAdmin && session.staffProfileId
+      ? { assignedStaffId: session.staffProfileId }
+      : {};
+
+  const pendingWhere = {
+    status: "PENDING" as "PENDING",
+    ...staffFilter,
+  };
+
+  const todayWhere = {
+    date: today,
+    status: { in: ["PENDING", "CONFIRMED"] as ("PENDING" | "CONFIRMED")[] },
+    ...staffFilter,
+  };
+
+  const [
+    todayAppointments,
+    memberCount,
+    activePromo,
+    weekAppointments,
+    pendingAppointments,
+    services,
+    daySchedule,
+  ] = await Promise.all([
+    prisma.appointment.findMany({
+      where: todayWhere,
+      include: {
+        service: true,
+        assignedStaff: {
+          select: { id: true, slug: true, label: true, color: true },
         },
-      }),
-      prisma.appointment.count({
-        where: {
-          date: { gte: today },
-          status: { in: ["PENDING", "CONFIRMED"] },
+      },
+      orderBy: { startTime: "asc" },
+    }),
+    prisma.user.count({ where: { role: "MEMBER", isActive: true } }),
+    prisma.promotion.findFirst({
+      where: {
+        isActive: true,
+        startDate: { lte: new Date() },
+        endDate: { gte: new Date() },
+      },
+    }),
+    prisma.appointment.count({
+      where: {
+        date: { gte: today },
+        status: { in: ["PENDING", "CONFIRMED"] },
+        ...staffFilter,
+      },
+    }),
+    prisma.appointment.findMany({
+      where: pendingWhere,
+      include: {
+        service: true,
+        assignedStaff: {
+          select: { id: true, slug: true, label: true, color: true },
         },
-      }),
-    ]);
+      },
+      orderBy: [{ date: "asc" }, { startTime: "asc" }],
+      take: 100,
+    }),
+    prisma.service.findMany({
+      where: { isActive: true, deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, durationMinutes: true },
+    }),
+    getSalonDaySchedule(today),
+  ]);
+
+  let initialActiveStaffId: string | null = null;
+  if (!superAdmin && session.staffProfileId) {
+    initialActiveStaffId = session.staffProfileId;
+  }
 
   return (
     <div>
-      <h1>Dashboard</h1>
-      <div className="grid grid-cols-3 gap-1.5">
-        <div className="card">
-          <p className="text-[10px] text-gray-500">Bugün</p>
-          <p className="text-lg font-bold text-lotus-700">{todayAppointments.length}</p>
-        </div>
-        <div className="card">
-          <p className="text-[10px] text-gray-500">Üye</p>
-          <p className="text-lg font-bold text-lotus-700">{memberCount}</p>
-        </div>
-        <div className="card">
-          <p className="text-[10px] text-gray-500">Gelecek</p>
-          <p className="text-lg font-bold text-lotus-700">{weekAppointments}</p>
-        </div>
-      </div>
+      <h1>Özet</h1>
 
-      {activePromo && (
-        <div className="card mt-1.5 border-l-2 border-gold">
-          <p className="text-[10px] text-gold-dark">Kampanya</p>
-          <p className="font-medium">{activePromo.title}</p>
-          <Link href="/admin/kampanyalar" className="text-[10px] text-lotus-600">
+      <AdminDashboardPanels
+        today={today}
+        initialPending={mapAdminAppointments(pendingAppointments)}
+        initialToday={mapAdminAppointments(todayAppointments)}
+        services={services}
+        staffProfiles={staffProfiles}
+        initialActiveStaffId={initialActiveStaffId}
+        isSuperAdmin={superAdmin}
+        currentStaffProfileId={session.staffProfileId ?? null}
+        multiAdminEnabled={multiAdmin}
+        initialDaySchedule={daySchedule}
+        memberCount={memberCount}
+        weekAppointments={weekAppointments}
+      />
+
+      {superAdmin && activePromo && (
+        <div className="card admin-promo-card">
+          <p className="admin-stat-card__label">Kampanya</p>
+          <p className="admin-promo-card__title">{activePromo.title}</p>
+          <Link href="/admin/kampanyalar" className="admin-link">
             →
           </Link>
         </div>
       )}
-
-      <div className="card mt-1.5">
-        <h2>Bugün {today}</h2>
-        {todayAppointments.length === 0 ? (
-          <p className="text-gray-500">Randevu yok.</p>
-        ) : (
-          <table className="w-full">
-            <tbody>
-              {todayAppointments.map((a) => (
-                <tr key={a.id} className="border-t border-gray-100">
-                  <td className="whitespace-nowrap">
-                    {a.startTime} {a.service.name}
-                  </td>
-                  <td className="text-gray-600">{a.name}</td>
-                  <td className="text-right text-lotus-600">{a.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
     </div>
   );
 }

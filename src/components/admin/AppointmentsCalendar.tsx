@@ -15,9 +15,16 @@ import {
   WEEKDAY_LABELS,
 } from "@/lib/calendar-dates";
 import { todayString } from "@/lib/timezone";
-import { formatPhoneDisplay, minutesToTime, timeToMinutes } from "@/lib/utils";
+import { formatPhoneDisplay } from "@/lib/phone";
+import { minutesToTime, timeToMinutes } from "@/lib/time-format";
 import { canEditAppointment } from "@/lib/admin-permissions";
 import type { AdminServiceOption } from "@/components/admin/AppointmentsAdmin";
+import { AppointmentApprovalSummary } from "@/components/admin/AppointmentApprovalSummary";
+import { DailyAppointmentsCard } from "@/components/admin/DailyAppointmentsCard";
+import {
+  DailyScheduleGrid,
+  statusChip,
+} from "@/components/admin/DailyScheduleGrid";
 
 export interface CalendarAppointment {
   id: string;
@@ -39,24 +46,10 @@ export interface CalendarAppointment {
 
 const statuses = ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"];
 const statusLabels: Record<string, string> = {
-  PENDING: "Beklemede",
+  PENDING: "Onay bekliyor",
   CONFIRMED: "Onaylandı",
   CANCELLED: "İptal",
   COMPLETED: "Tamamlandı",
-};
-
-const statusChip: Record<string, string> = {
-  PENDING: "apt-chip apt-chip--pending",
-  CONFIRMED: "apt-chip apt-chip--confirmed",
-  CANCELLED: "apt-chip apt-chip--cancelled",
-  COMPLETED: "apt-chip apt-chip--completed",
-};
-
-const statusDayEvent: Record<string, string> = {
-  PENDING: "apt-calendar__day-event apt-day-event--pending",
-  CONFIRMED: "apt-calendar__day-event apt-day-event--confirmed",
-  CANCELLED: "apt-calendar__day-event apt-day-event--cancelled",
-  COMPLETED: "apt-calendar__day-event apt-day-event--completed",
 };
 
 export type { CalendarView } from "@/lib/calendar-dates";
@@ -78,18 +71,6 @@ function groupByDate(appointments: CalendarAppointment[]) {
     list.sort((x, y) => x.startTime.localeCompare(y.startTime));
   }
   return map;
-}
-
-interface DaySchedule {
-  date: string;
-  closed: boolean;
-  reason?: string;
-  open?: string;
-  close?: string;
-  slotInterval: number;
-  slots: string[];
-  markedClosed?: boolean;
-  closedReason?: string | null;
 }
 
 export function AppointmentsCalendar({
@@ -178,6 +159,62 @@ export function AppointmentsCalendar({
     loadRange(range.from, range.to);
   }, [range.from, range.to, loadRange]);
 
+  async function applyAppointmentUpdate(updated: CalendarAppointment) {
+    setAppointments((prev) =>
+      prev.map((a) =>
+        a.id === updated.id ? { ...a, ...updated, service: a.service } : a
+      )
+    );
+  }
+
+  async function approveAppointmentById(id: string) {
+    if (statusSaving) return;
+    setStatusError("");
+    setStatusSaving(true);
+    try {
+      const res = await fetch(`/api/admin/appointments/${id}/approve`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatusError(
+          (data as { error?: string }).error || "Onaylanamadı."
+        );
+        return;
+      }
+      const updated = (data as { appointment: CalendarAppointment }).appointment;
+      if (updated) applyAppointmentUpdate(updated);
+    } catch {
+      setStatusError("Bağlantı hatası.");
+    } finally {
+      setStatusSaving(false);
+    }
+  }
+
+  async function rejectAppointmentById(id: string) {
+    if (statusSaving) return;
+    setStatusError("");
+    setStatusSaving(true);
+    try {
+      const res = await fetch(`/api/admin/appointments/${id}/reject`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatusError(
+          (data as { error?: string }).error || "Reddedilemedi."
+        );
+        return;
+      }
+      const updated = (data as { appointment: CalendarAppointment }).appointment;
+      if (updated) applyAppointmentUpdate(updated);
+    } catch {
+      setStatusError("Bağlantı hatası.");
+    } finally {
+      setStatusSaving(false);
+    }
+  }
+
   async function updateStatus(id: string, status: string) {
     if (statusSaving) return;
     const apt =
@@ -185,6 +222,10 @@ export function AppointmentsCalendar({
       visibleAppointments.find((a) => a.id === id);
     if (apt && !canEdit(apt)) {
       setStatusError("Bu randevuyu düzenleme yetkiniz yok.");
+      return;
+    }
+    if (status === "CONFIRMED" && apt?.status === "PENDING") {
+      await approveAppointmentById(id);
       return;
     }
     setStatusError("");
@@ -203,11 +244,7 @@ export function AppointmentsCalendar({
         return;
       }
       const updated = data as CalendarAppointment;
-      setAppointments((prev) =>
-        prev.map((a) =>
-          a.id === id ? { ...a, ...updated, service: a.service } : a
-        )
-      );
+      applyAppointmentUpdate(updated);
     } catch {
       setStatusError("Bağlantı hatası. Tekrar deneyin.");
     } finally {
@@ -241,7 +278,10 @@ export function AppointmentsCalendar({
     note?: string;
     userId?: string;
   }) {
-    const postBody: Record<string, unknown> = { ...payload, status: "CONFIRMED" };
+    const postBody: Record<string, unknown> = {
+      ...payload,
+      status: isSuperAdmin ? "CONFIRMED" : "PENDING",
+    };
     if (assignStaffIdForCreate) {
       postBody.assignedStaffId = assignStaffIdForCreate;
     }
@@ -281,6 +321,22 @@ export function AppointmentsCalendar({
   const selected = visibleAppointments.find((a) => a.id === selectedId) ?? null;
   const dayKey = toDateKey(cursor);
 
+  const pendingQueue = useMemo(
+    () =>
+      [...visibleAppointments]
+        .filter((a) => a.status === "PENDING")
+        .sort((a, b) => {
+          const d = a.date.localeCompare(b.date);
+          return d !== 0 ? d : a.startTime.localeCompare(b.startTime);
+        }),
+    [visibleAppointments]
+  );
+
+  const dayScheduleList = useMemo(
+    () => byDate.get(dayKey) ?? [],
+    [byDate, dayKey]
+  );
+
   function handleSelect(apt: CalendarAppointment) {
     setCreateSlot(null);
     setSelectedId(apt.id);
@@ -295,54 +351,37 @@ export function AppointmentsCalendar({
   return (
     <div className="apt-calendar space-y-2">
       {pinnedDailyPanel && (
-        <div className="card space-y-1">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="!mb-0 text-sm font-semibold text-lotus-800">
-              Günlük randevular
-            </h3>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                className="btn-secondary !px-2 !py-0.5 !text-[10px]"
-                onClick={() => setCursor((c) => navigateCursor("day", c, -1))}
-              >
-                ‹ Gün
-              </button>
-              <button
-                type="button"
-                className="btn-secondary !px-2 !py-0.5 !text-[10px]"
-                onClick={goToday}
-              >
-                Bugün
-              </button>
-              <button
-                type="button"
-                className="btn-secondary !px-2 !py-0.5 !text-[10px]"
-                onClick={() => setCursor((c) => navigateCursor("day", c, 1))}
-              >
-                Gün ›
-              </button>
-            </div>
-          </div>
-          {canCreate && multiAdminEnabled && !isSuperAdmin && (
-            <p className="text-[10px] text-gray-600">
-              Boş saate tıklayarak randevu ekleyin. Size atanan randevularda
-              &quot;Randevuyu iptal et&quot; ile çıkarabilirsiniz; başkasına
-              atanmış randevular salt okunurdur.
-            </p>
-          )}
-          <DailyScheduleGrid
-            cursor={cursor}
-            dateKey={dayKey}
-            appointments={byDate.get(dayKey) ?? []}
-            services={services}
-            canCreate={canCreate}
-            canEdit={canEdit}
-            highlightStaffProfileId={highlightStaffProfileId}
-            onSelect={handleSelect}
-            onSlotClick={handleSlotClick}
-          />
-        </div>
+        <AppointmentApprovalSummary
+          pending={pendingQueue}
+          canEdit={canEdit}
+          onApprove={approveAppointmentById}
+          onReject={rejectAppointmentById}
+          onSelect={handleSelect}
+          statusSaving={statusSaving}
+          showStaff={multiAdminEnabled}
+          dailyPanel={
+            <DailyAppointmentsCard
+              cursor={cursor}
+              onCursorChange={setCursor}
+              appointments={dayScheduleList}
+              services={services}
+              canCreate={canCreate}
+              canEdit={canEdit}
+              highlightStaffProfileId={highlightStaffProfileId}
+              onSelect={handleSelect}
+              onSlotClick={handleSlotClick}
+              hint={
+                canCreate && multiAdminEnabled && !isSuperAdmin ? (
+                  <p className="text-[10px] text-gray-600">
+                    Boş saate tıklayarak randevu ekleyin. Size atanan randevularda
+                    &quot;Randevuyu iptal et&quot; ile çıkarabilirsiniz; başkasına
+                    atanmış randevular salt okunurdur.
+                  </p>
+                ) : undefined
+              }
+            />
+          }
+        />
       )}
 
       <div className="apt-calendar__toolbar">
@@ -446,14 +485,24 @@ export function AppointmentsCalendar({
                 </p>
               )}
               {canEdit(selected) && selected.status === "PENDING" && (
-                <button
-                  type="button"
-                  className="btn-primary !py-1.5 !text-xs"
-                  disabled={statusSaving}
-                  onClick={() => updateStatus(selected.id, "CONFIRMED")}
-                >
-                  {statusSaving ? "Kaydediliyor…" : "Randevu Onayla"}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="btn-primary !py-1.5 !text-xs"
+                    disabled={statusSaving}
+                    onClick={() => approveAppointmentById(selected.id)}
+                  >
+                    {statusSaving ? "Kaydediliyor…" : "Randevu Onayla"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary !py-1.5 !text-xs !text-red-700"
+                    disabled={statusSaving}
+                    onClick={() => rejectAppointmentById(selected.id)}
+                  >
+                    Reddet
+                  </button>
+                </>
               )}
               {canEdit(selected) &&
                 selected.status !== "CANCELLED" &&
@@ -474,11 +523,17 @@ export function AppointmentsCalendar({
                 disabled={statusSaving || !canEdit(selected)}
                 onChange={(e) => updateStatus(selected.id, e.target.value)}
               >
-                {statuses.map((s) => (
-                  <option key={s} value={s}>
-                    {statusLabels[s]}
-                  </option>
-                ))}
+                {statuses
+                  .filter(
+                    (s) =>
+                      isSuperAdmin ||
+                      !(s === "CONFIRMED" && selected.status === "PENDING")
+                  )
+                  .map((s) => (
+                    <option key={s} value={s}>
+                      {statusLabels[s]}
+                    </option>
+                  ))}
               </select>
               {statusError && (
                 <p className="max-w-[14rem] text-right text-[10px] text-red-600">
@@ -641,182 +696,6 @@ function WeekView({
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function aptOccupiesSlot(apt: CalendarAppointment, slotTime: string): boolean {
-  const slotMin = timeToMinutes(slotTime);
-  return (
-    slotMin >= timeToMinutes(apt.startTime) && slotMin < timeToMinutes(apt.endTime)
-  );
-}
-
-function DailyScheduleGrid({
-  cursor,
-  dateKey,
-  appointments,
-  services,
-  canCreate,
-  canEdit,
-  highlightStaffProfileId,
-  onSelect,
-  onSlotClick,
-}: {
-  cursor: Date;
-  dateKey: string;
-  appointments: CalendarAppointment[];
-  services: AdminServiceOption[];
-  canCreate: boolean;
-  canEdit: (apt: CalendarAppointment) => boolean;
-  highlightStaffProfileId?: string;
-  onSelect: (a: CalendarAppointment) => void;
-  onSlotClick: (startTime: string) => void;
-}) {
-  const [schedule, setSchedule] = useState<DaySchedule | null>(null);
-  const [scheduleLoading, setScheduleLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    setScheduleLoading(true);
-    fetch(`/api/admin/appointments/schedule?date=${dateKey}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!cancelled) setSchedule(data as DaySchedule);
-      })
-      .finally(() => {
-        if (!cancelled) setScheduleLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [dateKey]);
-
-  const activeAppointments = appointments.filter((a) => a.status !== "CANCELLED");
-  const dayShort = format(cursor, "EEE", { locale: tr });
-  const slotSet = new Set(schedule?.slots ?? []);
-  const orphanAppointments = activeAppointments.filter(
-    (a) => !slotSet.has(a.startTime)
-  );
-
-  return (
-    <div className="apt-calendar__day-panel space-y-2">
-      {schedule?.markedClosed && (
-        <p className="rounded bg-amber-50 px-2 py-1 text-[10px] text-amber-800">
-          İşaretli kapalı gün
-          {schedule.closedReason ? `: ${schedule.closedReason}` : ""} — yine de randevu
-          eklenebilir.
-        </p>
-      )}
-
-      {scheduleLoading ? (
-        <div className="py-6 text-center text-gray-500">Saatler yükleniyor…</div>
-      ) : !schedule || schedule.closed ? (
-        <div className="rounded border border-gray-200 bg-gray-50 px-3 py-4 text-center text-[11px] text-gray-500">
-          {schedule?.reason || "Bu gün için çalışma saati yok."}
-        </div>
-      ) : (
-        <div className="rounded border border-lotus-200 bg-white px-3 py-1.5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-medium text-gray-700">
-              {dayShort} · {format(cursor, "d MMMM yyyy", { locale: tr })}
-            </span>
-            <span className="text-[10px] text-gray-500">
-              {schedule.open} – {schedule.close} · {schedule.slotInterval} dk
-            </span>
-          </div>
-          <p className="mt-1 text-[10px] text-gray-500">
-            {activeAppointments.length} randevu —{" "}
-            {canCreate
-              ? "boş saate tıklayarak randevu ekleyin"
-              : "boş saatlere tıklayarak görüntüleyin"}
-          </p>
-          <div className="apt-calendar__slot-grid mt-2">
-            {schedule.slots.map((slotTime) => {
-              const starting = activeAppointments.find(
-                (a) => a.startTime === slotTime
-              );
-              const occupied = activeAppointments.some((a) =>
-                aptOccupiesSlot(a, slotTime)
-              );
-              const isFree = !occupied;
-
-              if (starting) {
-                const chip =
-                  statusChip[starting.status]?.replace("apt-chip ", "") ?? "";
-                const isMine =
-                  highlightStaffProfileId &&
-                  starting.assignedStaffId === highlightStaffProfileId;
-                const readOnly = !canEdit(starting);
-                return (
-                  <button
-                    key={slotTime}
-                    type="button"
-                    className={`apt-calendar__slot-chip apt-calendar__slot-chip--booked ${chip} ${isMine ? "ring-2 ring-lotus-500 ring-offset-1" : ""}`}
-                    onClick={() => onSelect(starting)}
-                    title={
-                      readOnly
-                        ? `${starting.name} — salt okunur`
-                        : `${starting.name} — ${starting.service.name}`
-                    }
-                  >
-                    <span className="apt-calendar__slot-chip-time">{slotTime}</span>
-                    <span className="apt-calendar__slot-chip-name truncate">
-                      {starting.name}
-                    </span>
-                  </button>
-                );
-              }
-
-              if (isFree) {
-                return (
-                  <button
-                    key={slotTime}
-                    type="button"
-                    className="apt-calendar__slot-chip apt-calendar__slot-chip--free"
-                    onClick={() => canCreate && onSlotClick(slotTime)}
-                    disabled={!canCreate || services.length === 0}
-                    title={canCreate ? "Randevu ekle" : "Randevu ekleme yetkisi yok"}
-                  >
-                    {slotTime}
-                  </button>
-                );
-              }
-
-              return (
-                <span
-                  key={slotTime}
-                  className="apt-calendar__slot-chip apt-calendar__slot-chip--busy"
-                  aria-hidden
-                >
-                  {slotTime}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {orphanAppointments.length > 0 && (
-        <div className="rounded border border-gray-200 bg-gray-50 px-3 py-2">
-          <p className="mb-1 text-[10px] font-medium text-gray-600">
-            Çalışma saatleri dışı / özel saat
-          </p>
-          <ul className="space-y-1">
-            {orphanAppointments.map((a) => (
-              <li key={a.id}>
-                <button
-                  type="button"
-                  className={`${statusDayEvent[a.status] ?? "apt-calendar__day-event"} w-full rounded px-2 py-1 text-left text-[11px]`}
-                  onClick={() => onSelect(a)}
-                >
-                  {a.startTime}–{a.endTime} {a.name} · {a.service.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

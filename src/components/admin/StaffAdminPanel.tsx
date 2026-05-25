@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { StaffServiceEditor } from "@/components/admin/StaffServiceEditor";
 import { STAFF_PROFILE_COLORS } from "@/lib/staff-admin";
-import { formatPhoneDisplay } from "@/lib/utils";
+import { formatPhoneDisplay } from "@/lib/phone";
 
 interface StaffRow {
   id: string;

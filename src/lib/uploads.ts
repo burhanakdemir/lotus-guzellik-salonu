@@ -1,4 +1,13 @@
+import "server-only";
 import path from "path";
+import {
+  type UploadSubdir,
+  resolveUploadPublicUrl,
+  uploadPublicUrl,
+} from "./upload-urls";
+
+export type { UploadSubdir } from "./upload-urls";
+export { resolveUploadPublicUrl, uploadPublicUrl };
 
 /** Admin / yorum yüklemeleri (Render: public/uploads disk mount) */
 export function getUploadRoot(): string {
@@ -7,25 +16,8 @@ export function getUploadRoot(): string {
   return path.join(process.cwd(), "public", "uploads");
 }
 
-export type UploadSubdir = "services" | "gallery" | "reviews" | "promotions";
-
 export function getUploadSubdir(subdir: UploadSubdir): string {
   return path.join(getUploadRoot(), subdir);
-}
-
-/** Tarayıcıda sunulan URL (Next statik yerine API ile okunur — Render uyumlu) */
-export function uploadPublicUrl(subdir: UploadSubdir, filename: string): string {
-  return `/api/files/${subdir}/${filename}`;
-}
-
-/** DB'deki /uploads/... veya göreli yolu API URL'sine çevirir */
-export function resolveUploadPublicUrl(stored: string): string {
-  if (stored.startsWith("/api/files/")) return stored;
-  if (stored.startsWith("/uploads/")) {
-    return `/api/files${stored.slice("/uploads".length)}`;
-  }
-  if (stored.startsWith("/")) return stored;
-  return `/api/files/services/${stored}`;
 }
 
 export async function isUploadRootWritable(): Promise<boolean> {

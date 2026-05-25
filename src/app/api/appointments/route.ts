@@ -5,6 +5,7 @@ import { getAvailableSlots } from "@/lib/slots";
 import { staffCanPerformService } from "@/lib/staff-services";
 import { isMultiAdminEnabled } from "@/lib/staff-admin";
 import { normalizePhone, timeToMinutes, minutesToTime } from "@/lib/utils";
+import { notifyStaffOfNewAppointment } from "@/lib/staff-notifications";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -119,11 +120,25 @@ export async function POST(req: Request) {
       },
       include: {
         service: true,
-        assignedStaff: { select: { id: true, label: true } },
+        assignedStaff: {
+          select: { id: true, label: true, userId: true },
+        },
       },
     });
 
-    return NextResponse.json({ appointment });
+    await notifyStaffOfNewAppointment({
+      id: appointment.id,
+      name: appointment.name,
+      phone: appointment.phone,
+      date: appointment.date,
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      assignedStaffId: appointment.assignedStaffId,
+      service: { name: appointment.service.name },
+      assignedStaff: appointment.assignedStaff,
+    }).catch((e) => console.error("[notifyStaffOfNewAppointment]", e));
+
+    return NextResponse.json({ appointment, awaitingApproval: true });
   } catch (e) {
     if (e instanceof z.ZodError) {
       const msg = e.errors[0]?.message;

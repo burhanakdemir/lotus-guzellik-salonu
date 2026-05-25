@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { loginUser, setSessionCookie } from "@/lib/auth";
+import { isPrismaSchemaMismatchError, SCHEMA_MISMATCH_MESSAGE } from "@/lib/prisma-errors";
 import { z } from "zod";
 
 const schema = z.object({
@@ -37,7 +38,11 @@ export async function POST(req: Request) {
     }
     await setSessionCookie(result.token);
     return NextResponse.json({ user: result.user });
-  } catch {
+  } catch (e) {
+    console.error("[auth/login]", e);
+    if (isPrismaSchemaMismatchError(e)) {
+      return NextResponse.json({ error: SCHEMA_MISMATCH_MESSAGE }, { status: 503 });
+    }
     return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
   }
 }

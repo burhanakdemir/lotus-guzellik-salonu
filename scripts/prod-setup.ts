@@ -9,14 +9,30 @@ import { execSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
+import { mkdir, writeFile, unlink } from "fs/promises";
 import { ensureAdminUser } from "./ensure-admin";
-import { isUploadRootWritable } from "../src/lib/uploads";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 function run(cmd: string, label: string, env: NodeJS.ProcessEnv = process.env) {
   console.log(`\n→ ${label}`);
   execSync(cmd, { cwd: root, stdio: "inherit", env });
+}
+
+async function checkUploadRootWritable(): Promise<boolean> {
+  try {
+    const fromEnv = process.env.UPLOAD_ROOT?.trim();
+    const uploadRoot = fromEnv
+      ? join(fromEnv)
+      : join(root, "public", "uploads");
+    await mkdir(uploadRoot, { recursive: true });
+    const test = join(uploadRoot, ".write-test");
+    await writeFile(test, "ok");
+    await unlink(test);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function databaseUrlForPush(): string {
@@ -32,7 +48,7 @@ async function main() {
   console.log("→ Deploy kilidi: hizmet/görsel listesi deploy sırasında değiştirilmez.");
 
   run("node scripts/ensure-dirs.mjs", "Klasörler");
-  const uploadOk = await isUploadRootWritable();
+  const uploadOk = await checkUploadRootWritable();
   if (uploadOk) {
     console.log("→ Yükleme diskine yazılabiliyor (admin görselleri kalıcı).");
   } else {

@@ -9,7 +9,10 @@ import {
   sealPendingSetupSecret,
   verifyTotpCode,
 } from "@/lib/totp";
+import { isPrismaSchemaMismatchError, SCHEMA_MISMATCH_MESSAGE } from "@/lib/prisma-errors";
 import { z } from "zod";
+
+export const runtime = "nodejs";
 
 const resetSchema = z.object({
   password: z.string().min(6),
@@ -57,10 +60,14 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
+    console.error("[admin/totp DELETE]", e);
     if (e instanceof Error && e.name === "AdminUnauthorizedError") {
       return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
     }
-    return NextResponse.json({ error: "Silinemedi." }, { status: 400 });
+    if (isPrismaSchemaMismatchError(e)) {
+      return NextResponse.json({ error: SCHEMA_MISMATCH_MESSAGE }, { status: 503 });
+    }
+    return NextResponse.json({ error: "Silinemedi." }, { status: 500 });
   }
 }
 
@@ -114,10 +121,14 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ qrDataUrl, otpauthUrl, setupSeal, account });
   } catch (e) {
+    console.error("[admin/totp POST]", e);
     if (e instanceof Error && e.name === "AdminUnauthorizedError") {
       return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
     }
-    return NextResponse.json({ error: "İşlem başarısız." }, { status: 400 });
+    if (isPrismaSchemaMismatchError(e)) {
+      return NextResponse.json({ error: SCHEMA_MISMATCH_MESSAGE }, { status: 503 });
+    }
+    return NextResponse.json({ error: "İşlem başarısız." }, { status: 500 });
   }
 }
 
@@ -133,7 +144,14 @@ export async function GET() {
       enabled: Boolean(user?.totpEnabledAt),
       enabledAt: user?.totpEnabledAt?.toISOString() ?? null,
     });
-  } catch {
-    return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+  } catch (e) {
+    console.error("[admin/totp GET]", e);
+    if (e instanceof Error && e.name === "AdminUnauthorizedError") {
+      return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+    }
+    if (isPrismaSchemaMismatchError(e)) {
+      return NextResponse.json({ error: SCHEMA_MISMATCH_MESSAGE }, { status: 503 });
+    }
+    return NextResponse.json({ error: "Hata" }, { status: 500 });
   }
 }

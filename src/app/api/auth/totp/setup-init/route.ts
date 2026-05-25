@@ -7,7 +7,10 @@ import {
   sealPendingSetupSecret,
 } from "@/lib/totp";
 import { verifyTotpPendingToken } from "@/lib/totp-pending";
+import { isPrismaSchemaMismatchError, SCHEMA_MISMATCH_MESSAGE } from "@/lib/prisma-errors";
 import { z } from "zod";
+
+export const runtime = "nodejs";
 
 const schema = z.object({
   pendingToken: z.string().min(10),
@@ -38,7 +41,11 @@ export async function POST(req: Request) {
       setupSeal,
       account,
     });
-  } catch {
-    return NextResponse.json({ error: "Kurulum başlatılamadı." }, { status: 400 });
+  } catch (e) {
+    console.error("[totp/setup-init]", e);
+    if (isPrismaSchemaMismatchError(e)) {
+      return NextResponse.json({ error: SCHEMA_MISMATCH_MESSAGE }, { status: 503 });
+    }
+    return NextResponse.json({ error: "Kurulum başlatılamadı." }, { status: 500 });
   }
 }

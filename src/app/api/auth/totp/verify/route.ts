@@ -3,7 +3,10 @@ import { issueSessionForUserId, setSessionCookie } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyTotpCode } from "@/lib/totp";
 import { verifyTotpPendingToken } from "@/lib/totp-pending";
+import { isPrismaSchemaMismatchError, SCHEMA_MISMATCH_MESSAGE } from "@/lib/prisma-errors";
 import { z } from "zod";
+
+export const runtime = "nodejs";
 
 const schema = z.object({
   pendingToken: z.string().min(10),
@@ -33,7 +36,11 @@ export async function POST(req: Request) {
     }
     await setSessionCookie(session.token);
     return NextResponse.json({ user: session.user });
-  } catch {
-    return NextResponse.json({ error: "Doğrulama başarısız." }, { status: 400 });
+  } catch (e) {
+    console.error("[totp/verify]", e);
+    if (isPrismaSchemaMismatchError(e)) {
+      return NextResponse.json({ error: SCHEMA_MISMATCH_MESSAGE }, { status: 503 });
+    }
+    return NextResponse.json({ error: "Doğrulama başarısız." }, { status: 500 });
   }
 }

@@ -11,23 +11,31 @@ export default async function AdminAyarlarPage() {
   });
   const closedDays = await prisma.closedDay.findMany({ orderBy: { date: "asc" } });
 
-  const adminUser =
-    session?.role === "ADMIN"
-      ? await prisma.user.findUnique({
-          where: { id: session.id },
-          select: { totpEnabledAt: true },
-        })
-      : null;
+  let adminTotp: { enabled: boolean; enabledAt: string | null } | null = null;
+  if (session?.role === "ADMIN") {
+    try {
+      const adminUser = await prisma.user.findUnique({
+        where: { id: session.id },
+        select: { totpEnabledAt: true },
+      });
+      adminTotp = {
+        enabled: Boolean(adminUser?.totpEnabledAt),
+        enabledAt: adminUser?.totpEnabledAt?.toISOString() ?? null,
+      };
+    } catch {
+      adminTotp = { enabled: false, enabledAt: null };
+    }
+  }
 
   if (!settings) return <p>Ayarlar yüklenemedi.</p>;
 
   return (
     <div className="space-y-6">
       <h1>Ayarlar</h1>
-      {adminUser && (
+      {adminTotp && (
         <AdminTotpSettings
-          initialEnabled={Boolean(adminUser.totpEnabledAt)}
-          enabledAt={adminUser.totpEnabledAt?.toISOString() ?? null}
+          initialEnabled={adminTotp.enabled}
+          enabledAt={adminTotp.enabledAt}
         />
       )}
       <SettingsAdmin

@@ -11,6 +11,7 @@ import { verifyPassword } from "./password";
 import { prisma } from "./prisma";
 import { isMultiAdminEnabled, isStaffAdmin, isSuperAdmin } from "./staff-admin";
 import { normalizePhone } from "./utils";
+import { createTotpPendingToken } from "./totp-pending";
 
 export { hashPassword, verifyPassword } from "./password";
 
@@ -121,10 +122,27 @@ export async function clearSessionCookie(): Promise<void> {
   cookieStore.delete(COOKIE_NAME);
 }
 
+export type LoginResult =
+  | { user: SessionUser; token: string }
+  | { requiresTotp: true; pendingToken: string }
+  | { requiresTotpSetup: true; pendingToken: string }
+  | { error: string };
+
+export async function issueSessionForUserId(
+  userId: string
+): Promise<{ user: SessionUser; token: string } | { error: string }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user?.isActive) return { error: "Hesap bulunamadı." };
+  const sessionUser = await buildSessionUser(user);
+  if (!sessionUser) return { error: "Oturum oluşturulamadı." };
+  const token = await createToken(sessionUser);
+  return { user: sessionUser, token };
+}
+
 export async function loginUser(
   identifier: string,
   password: string
-): Promise<{ user: SessionUser; token: string } | { error: string }> {
+): Promise<LoginResult> {
   const trimmed = identifier.trim();
   if (trimmed.length < 2) {
     return { error: "Telefon veya ad girin." };
@@ -171,6 +189,19 @@ export async function loginUser(
   const sessionUser = await buildSessionUser(user);
   if (!sessionUser) {
     return { error: "Usta profili bulunamadı veya pasif." };
+  }
+
+  if (sessionUser.role === "ADMIN") {
+    if (user.totpSecret && user.totpEnabledAt) {
+      return {
+        requiresTotp: true,
+        pendingToken: await createTotpPendingToken(user.id, "totp_login"),
+      };
+    }
+    return {
+      requiresTotpSetup: true,
+      pendingToken: await createTotpPendingToken(user.id, "totp_setup"),
+    };
   }
 
   const token = await createToken(sessionUser);

@@ -43,6 +43,12 @@ export async function Header() {
           <Link href="/yorumlar" className="transition hover:text-lotus-600">
             Yorumlar
           </Link>
+          <Link
+            href="/admin/giris"
+            className="transition hover:text-lotus-600"
+          >
+            Ustalar
+          </Link>
           <Link href="/randevu" className={headerBtn}>
             Randevu Al
           </Link>
@@ -91,6 +97,9 @@ export async function Header() {
         <Link href="/hakkimizda" className="hover:text-lotus-600">Hakkımızda</Link>
         <Link href="/galeri" className="hover:text-lotus-600">Galeri</Link>
         <Link href="/yorumlar" className="hover:text-lotus-600">Yorumlar</Link>
+        <Link href="/admin/giris" className="hover:text-lotus-600">
+          Ustalar
+        </Link>
       </nav>
     </header>
   );

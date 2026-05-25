@@ -23,6 +23,18 @@ export async function POST(req: Request) {
     if ("error" in result) {
       return NextResponse.json({ error: result.error }, { status: 401 });
     }
+    if ("requiresTotp" in result) {
+      return NextResponse.json({
+        requiresTotp: true,
+        pendingToken: result.pendingToken,
+      });
+    }
+    if ("requiresTotpSetup" in result) {
+      return NextResponse.json({
+        requiresTotpSetup: true,
+        pendingToken: result.pendingToken,
+      });
+    }
     await setSessionCookie(result.token);
     return NextResponse.json({ user: result.user });
   } catch {

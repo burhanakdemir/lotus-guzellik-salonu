@@ -144,3 +144,76 @@ body {
   width: 100%;
   max-width: 28rem;
 }
+
+/* Hizmetler — 12 kategori: 6+6 eşit kutu */
+.services-category-nav__grid {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .services-category-nav__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .services-category-nav__grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+}
+
+.services-category-nav__item {
+  display: flex;
+  height: 100%;
+  min-height: 4.75rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-rose-200);
+  background: #fff;
+  padding: 0.5rem 0.4rem;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.services-category-nav__item:hover {
+  border-color: var(--color-lotus-400);
+  background: var(--color-lotus-50);
+  box-shadow: 0 2px 8px rgba(142, 68, 98, 0.08);
+}
+
+.services-category-nav__label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-lotus-800);
+}
+
+@media (min-width: 1024px) {
+  .services-category-nav__label {
+    font-size: 0.7rem;
+  }
+}
+
+.services-category-nav__count {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: #9ca3af;
+  white-space: nowrap;
+}

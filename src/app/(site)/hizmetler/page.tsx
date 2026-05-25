@@ -40,21 +40,26 @@ export default async function HizmetlerPage() {
       <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
         {sortedCategories.length > 0 && (
           <nav
-            className="sticky top-0 z-20 -mx-1 mb-12 flex flex-wrap gap-2 border-b border-rose-100 bg-cream/95 px-1 py-3 backdrop-blur-sm"
+            className="services-category-nav sticky top-0 z-20 mb-12 border-b border-rose-100 bg-cream/95 py-4 backdrop-blur-sm"
             aria-label="Hizmet kategorileri"
           >
-            {sortedCategories.map((cat) => (
-              <a
-                key={cat}
-                href={`#${categorySectionId(cat)}`}
-                className="rounded-full border border-rose-200 bg-white px-3 py-1 text-[11px] font-medium text-lotus-800 transition hover:border-lotus-400 hover:bg-lotus-50"
-              >
-                {getServiceCategoryLabel(cat)}
-                <span className="ml-1 text-gray-400">
-                  ({grouped[cat].length})
-                </span>
-              </a>
-            ))}
+            <ul className="services-category-nav__grid">
+              {sortedCategories.map((cat) => (
+                <li key={cat}>
+                  <a
+                    href={`#${categorySectionId(cat)}`}
+                    className="services-category-nav__item"
+                  >
+                    <span className="services-category-nav__label">
+                      {getServiceCategoryLabel(cat)}
+                    </span>
+                    <span className="services-category-nav__count">
+                      {grouped[cat].length} hizmet
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </nav>
         )}
 

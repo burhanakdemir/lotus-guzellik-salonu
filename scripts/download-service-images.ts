@@ -6,7 +6,16 @@ import { writeFileSync, mkdirSync, copyFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { servicesCatalog } from "../prisma/services-catalog";
-import { pexelsUrl, photoIdForService } from "./service-image-sources";
+import {
+  deprecatedPhotoIds,
+  pexelsUrl,
+  photoIdForService,
+  slugPhotoIds,
+} from "./service-image-sources";
+import { unlinkSync } from "fs";
+
+const force =
+  process.argv.includes("--refresh") || process.env.REFRESH_IMAGES === "1";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, "..", "public", "services");
@@ -36,11 +45,12 @@ async function ensureCategoryImages() {
     const photoId = photoIdForService(sample.slug, category);
     const url = pexelsUrl(photoId);
     const dest = join(categoriesDir, `${category}.jpg`);
-    if (existsSync(dest)) {
+    if (existsSync(dest) && !force) {
       downloadedByUrl.set(url, dest);
       console.log(`○ categories/${category}.jpg (mevcut)`);
       continue;
     }
+    if (existsSync(dest) && force) unlinkSync(dest);
     try {
       const buf = await download(url);
       writeFileSync(dest, buf);
@@ -61,10 +71,11 @@ async function downloadServiceImages() {
     const url = pexelsUrl(photoId);
     const dest = join(outDir, `${s.slug}.jpg`);
 
-    if (existsSync(dest)) {
+    if (existsSync(dest) && !force) {
       ok++;
       continue;
     }
+    if (existsSync(dest) && force) unlinkSync(dest);
 
     if (downloadedByUrl.has(url)) {
       const src = downloadedByUrl.get(url)!;
@@ -91,7 +102,37 @@ async function downloadServiceImages() {
   console.log(`\n${ok} görsel hazır, ${fail} hata.`);
 }
 
+/** Eski hatalı Pexels ID (3782099, 775009) ile indirilmiş JPG'leri siler */
+function purgeDeprecatedImages() {
+  let n = 0;
+  for (const s of servicesCatalog) {
+    if (s.category !== "cilt-bakimi" && s.category !== "agda-hizmetleri") continue;
+    const dest = join(outDir, `${s.slug}.jpg`);
+    if (existsSync(dest)) {
+      unlinkSync(dest);
+      n++;
+    }
+  }
+  for (const category of ["cilt-bakimi", "agda-hizmetleri"] as const) {
+    const dest = join(categoriesDir, `${category}.jpg`);
+    if (existsSync(dest)) {
+      unlinkSync(dest);
+      n++;
+    }
+  }
+  for (const slug of Object.keys(slugPhotoIds)) {
+    const dest = join(outDir, `${slug}.jpg`);
+    if (!existsSync(dest)) continue;
+    const id = slugPhotoIds[slug];
+    if (!deprecatedPhotoIds.has(id)) continue;
+    unlinkSync(dest);
+    n++;
+  }
+  if (n > 0) console.log(`→ ${n} eski görsel silindi (yeniden indirilecek).`);
+}
+
 async function main() {
+  if (process.argv.includes("--purge-deprecated")) purgeDeprecatedImages();
   await ensureCategoryImages();
   await downloadServiceImages();
 }

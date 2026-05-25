@@ -21,6 +21,7 @@
     "db:setup": "npm run docker:up && npm run prod:setup",
     "images:generate": "tsx scripts/generate-placeholders.ts",
     "images:download": "tsx scripts/download-service-images.ts",
+    "images:refresh-stale": "tsx scripts/download-service-images.ts --purge-deprecated --refresh",
     "images:logo": "node scripts/generate-logo.mjs",
     "images:prepare": "npm run images:download && npm run images:generate && npm run images:logo",
     "images:verify": "tsx scripts/verify-assets.ts",

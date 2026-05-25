@@ -1,6 +1,7 @@
 /**
  * Pexels fotoğraf ID'leri — kategori ve öne çıkan hizmetler için.
  * https://www.pexels.com (ücretsiz kullanım)
+ * Not: Aynı ID farklı kategorilerde kullanılmamalı (banner tekrarlar).
  */
 
 export const PEXELS_QUERY =
@@ -10,27 +11,27 @@ export function pexelsUrl(photoId: number): string {
   return `https://images.pexels.com/photos/${photoId}/pexels-photo-${photoId}.jpeg?${PEXELS_QUERY}`;
 }
 
-/** Kategori varsayılan görselleri */
+/** Kategori banner görselleri (her biri farklı, salon/spa temalı) */
 export const categoryPhotoIds: Record<string, number> = {
-  "fon-bakim": 1319460, // fön / saç şekillendirme
-  kesim: 3738345, // saç kesimi
-  renklendirme: 2860711, // saç boyama
-  "kalici-sekillendirme": 3993449, // salon / şekillendirme
-  "gecici-sekillendirme": 2658508, // gelin / özel gün saçı
-  "sac-uzatma": 1036621, // uzun saç
-  "el-ayak-bakim": 3997981, // tırnak / manikür
-  "makyaj-guzellik": 2533266, // makyaj
-  "cilt-bakimi": 3782099, // cilt bakımı / spa
-  "kalici-makyaj": 5069344, // kaş / güzellik detay
-  "lazer-epilasyon": 5069437, // lazer / cilt bakım cihazı
-  "agda-hizmetleri": 3782099, // spa / bakım
+  "fon-bakim": 1319460,
+  kesim: 3738345,
+  renklendirme: 2860711,
+  "kalici-sekillendirme": 3993449,
+  "gecici-sekillendirme": 2658508,
+  "sac-uzatma": 1036621,
+  "el-ayak-bakim": 3997981,
+  "makyaj-guzellik": 2533266,
+  "cilt-bakimi": 3757942, // yüz / spa masajı
+  "kalici-makyaj": 5069344,
+  "lazer-epilasyon": 5069437,
+  "agda-hizmetleri": 3992873, // güzellik salonu
 };
 
 /** Alt hizmete özel görseller (kategori varsayılanından farklı) */
 export const slugPhotoIds: Record<string, number> = {
   fon: 1319460,
   "fon-bakim": 3993449,
-  "maske-bakim": 3782099,
+  "maske-bakim": 3757942,
   "keratin-bakim": 3993449,
   "sac-yikama": 1319460,
   "kahkul-kesimi": 3738345,
@@ -65,26 +66,29 @@ export const slugPhotoIds: Record<string, number> = {
   "porselen-makyaj": 2533266,
   "kas-dizayn": 5069344,
   "kas-alimi": 5069344,
-  "yuz-alimi": 775009,
-  hydrafacial: 3782099,
-  dermapen: 3782099,
-  "kimyasal-peeling": 3782099,
+  "yuz-alimi": 5069344,
+  hydrafacial: 3757942,
+  dermapen: 3757942,
+  "kimyasal-peeling": 3757942,
   microblading: 5069344,
   "dudak-renklendirme": 2533266,
   dipliner: 5069344,
   "eyeliner-kalici": 5069344,
   "lazer-tum-vucut": 5069437,
-  "lazer-yarim-bacak": 775009,
-  "lazer-tum-bacak": 775009,
+  "lazer-yarim-bacak": 5069437,
+  "lazer-tum-bacak": 5069437,
   "lazer-koltuk-alti": 5069437,
   "lazer-yuz": 5069344,
-  "agda-tum-vucut": 3782099,
-  "agda-yarim-bacak": 775009,
-  "agda-tum-bacak": 775009,
-  "agda-koltuk-alti": 3782099,
+  "agda-tum-vucut": 3992873,
+  "agda-yarim-bacak": 775515,
+  "agda-tum-bacak": 775515,
+  "agda-koltuk-alti": 3992873,
   "agda-yuz": 5069344,
 };
 
 export function photoIdForService(slug: string, category: string): number {
-  return slugPhotoIds[slug] ?? categoryPhotoIds[category] ?? 3782099;
+  return slugPhotoIds[slug] ?? categoryPhotoIds[category] ?? 3757942;
 }
+
+/** Eski / hatalı Pexels ID'leri — yeniden indirme için */
+export const deprecatedPhotoIds = new Set([3782099, 775009]);

@@ -8,6 +8,8 @@ import {
   buildScheduleFromSettings,
   scheduleToSettingsFields,
 } from "@/components/admin/WorkScheduleEditor";
+import { ShowcaseImagesAdmin } from "@/components/admin/ShowcaseImagesAdmin";
+import type { ShowcaseFields } from "@/lib/showcase-images";
 
 interface Settings {
   salonName: string;
@@ -41,10 +43,12 @@ export function SettingsAdmin({
   settings: initial,
   closedDays: initialClosed,
   multiAdminEnabled = false,
+  showcase,
 }: {
   settings: Settings;
   closedDays: ClosedDay[];
   multiAdminEnabled?: boolean;
+  showcase: ShowcaseFields;
 }) {
   const [settings, setSettings] = useState(initial);
   const [closedDays, setClosedDays] = useState(initialClosed);
@@ -93,6 +97,11 @@ export function SettingsAdmin({
       {saveError && (
         <p className="rounded bg-red-50 px-2 py-0.5 text-[11px] text-red-700">{saveError}</p>
       )}
+
+      <details className="card" open>
+        <summary>▸ İşletme resimleri (ana sayfa)</summary>
+        <ShowcaseImagesAdmin initial={showcase} />
+      </details>
 
       <details className="card">
         <summary>▸ Site içeriği</summary>

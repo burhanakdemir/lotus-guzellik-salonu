@@ -30,6 +30,7 @@
     "deploy-lock:export": "npx tsx scripts/export-deploy-lock.ts",
     "deploy-lock:import": "node scripts/import-deploy-lock.mjs",
     "ensure:dirs": "node scripts/ensure-dirs.mjs",
+    "logo:copy": "node scripts/copy-header-logo.mjs",
     "db:studio": "prisma studio",
     "theme:save-tema1": "node scripts/save-tema1.mjs",
     "theme:restore-tema1": "node scripts/restore-tema1.mjs",

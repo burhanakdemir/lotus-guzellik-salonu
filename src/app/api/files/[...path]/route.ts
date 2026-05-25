@@ -3,7 +3,7 @@ import path from "path";
 import { NextResponse } from "next/server";
 import { getUploadRoot } from "@/lib/uploads";
 
-const ALLOWED = new Set(["services", "gallery", "reviews", "promotions"]);
+const ALLOWED = new Set(["services", "gallery", "reviews", "promotions", "salon"]);
 
 const MIME: Record<string, string> = {
   jpg: "image/jpeg",

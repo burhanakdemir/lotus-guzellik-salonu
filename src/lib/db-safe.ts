@@ -51,6 +51,10 @@ export const DEFAULT_SALON_SETTINGS = {
   instagram: null as string | null,
   facebook: null as string | null,
   slotInterval: 30,
+  showcaseImage1: null as string | null,
+  showcaseImage2: null as string | null,
+  showcaseImage3: null as string | null,
+  showcaseImage4: null as string | null,
 } as const;
 
 export function isDbConnectionError(error: unknown): boolean {

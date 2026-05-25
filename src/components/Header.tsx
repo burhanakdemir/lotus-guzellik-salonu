@@ -1,6 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { LotusLogo } from "@/components/LotusLogo";
 import { MemberNotificationBell } from "@/components/MemberNotificationBell";
 import { LogoutButton } from "@/components/LogoutButton";
 
@@ -14,14 +14,18 @@ export async function Header() {
     <header className="sticky top-0 z-50 border-b border-lotus-200/70 bg-white/85 shadow-sm shadow-lotus-600/5 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
         <Link href="/" className="group flex items-center gap-3">
-          <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-lotus-blush via-lotus-100 to-lotus-200 shadow-md ring-2 ring-lotus-300/50 transition duration-300 group-hover:ring-lotus-center group-hover:shadow-lotus-400/30">
-            <LotusLogo size={40} variant="icon" id="header-lotus" />
-          </div>
-          <div className="hidden sm:block">
-            <span className="font-display text-xl font-semibold tracking-wide text-lotus-900">
-              LOTUS
-            </span>
-            <span className="block text-[10px] font-medium uppercase tracking-[0.22em] text-lotus-600">
+          <Image
+            src="/logo/lotus-sade.png"
+            alt="Lotus Kuaför & Güzellik Salonu"
+            width={52}
+            height={52}
+            className="h-12 w-auto shrink-0 object-contain transition duration-300 group-hover:opacity-90"
+            priority
+          />
+          <div className="header-brand" aria-label="Lotus Kuaför ve Güzellik Salonu">
+            <span className="header-brand__line">Lotus Kuaför</span>
+            <span className="header-brand__amp">&amp;</span>
+            <span className="header-brand__line header-brand__line--sub">
               Güzellik Salonu
             </span>
           </div>

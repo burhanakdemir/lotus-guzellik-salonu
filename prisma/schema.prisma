@@ -243,6 +243,11 @@ model SalonSettings {
   saturdayClose   String?
   sundayOpen      String?
   sundayClose     String?
+  /// Ana sayfa hero — 4 işletme görseli (boş = bordo alan)
+  showcaseImage1  String?
+  showcaseImage2  String?
+  showcaseImage3  String?
+  showcaseImage4  String?
 }
 
 model ClosedDay {

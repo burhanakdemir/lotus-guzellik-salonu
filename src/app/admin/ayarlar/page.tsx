@@ -42,6 +42,12 @@ export default async function AdminAyarlarPage() {
         settings={settings}
         closedDays={closedDays}
         multiAdminEnabled={isMultiAdminEnabled()}
+        showcase={{
+          showcaseImage1: settings.showcaseImage1,
+          showcaseImage2: settings.showcaseImage2,
+          showcaseImage3: settings.showcaseImage3,
+          showcaseImage4: settings.showcaseImage4,
+        }}
       />
     </div>
   );

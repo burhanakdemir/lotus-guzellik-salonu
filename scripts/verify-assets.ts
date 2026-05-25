@@ -21,6 +21,7 @@ const uploadDirs = [
   "uploads/gallery",
   "uploads/reviews",
   "uploads/promotions",
+  "uploads/salon",
 ];
 
 let missing = 0;

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSalonSettingsSafe, safeDbQuery } from "@/lib/db-safe";
 import { ServiceCard } from "@/components/ServiceCard";
+import { HeroShowcaseGrid } from "@/components/HeroShowcaseGrid";
 import { WeeklyPromotions } from "@/components/WeeklyPromotions";
 import { servicesCatalog } from "../../../prisma/services-catalog";
 
@@ -54,15 +55,16 @@ export default async function HomePage() {
         <div className="hero-pattern absolute inset-0 opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-br from-lotus-700 via-lotus-800 to-lotus-900" />
 
-        <div className="relative z-10 mx-auto grid max-w-7xl items-start gap-6 px-4 pt-4 pb-8 md:pt-5 md:pb-10 lg:grid-cols-2 lg:gap-8 lg:px-8 lg:pt-6 lg:pb-12">
-          <div>
-            <h1 className="font-display text-3xl font-light leading-tight text-white md:text-4xl lg:text-5xl">
-              {settings?.heroTitle}
-            </h1>
-            <p className="mt-3 max-w-xl text-base leading-snug text-lotus-100/95 md:text-lg">
-              {settings?.heroSubtitle}
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 pt-4 pb-8 md:pt-5 md:pb-10 lg:px-8 lg:pt-6 lg:pb-12">
+          <h1 className="font-display text-3xl font-light leading-tight text-white md:text-4xl lg:text-5xl">
+            {settings?.heroTitle}
+          </h1>
+          <p className="mt-3 max-w-xl text-base leading-snug text-lotus-100/95 md:text-lg">
+            {settings?.heroSubtitle}
+          </p>
+
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap gap-3">
               <Link href="/randevu" className="btn-gold">
                 Randevu Al
               </Link>
@@ -70,31 +72,15 @@ export default async function HomePage() {
                 Üye Ol
               </Link>
             </div>
+            <p className="hero-member-pill">
+              <span className="hero-member-pill__icon" aria-hidden>
+                ✓
+              </span>
+              Üyelere özel indirim ve kampanyalar
+            </p>
           </div>
 
-          <div className="flex justify-end">
-            <div className="w-max max-w-full rounded-lg border border-white/10 bg-white/5 p-3.5 backdrop-blur-sm">
-              <h2 className="font-display whitespace-nowrap text-lg text-lotus-center">Neden LOTUS?</h2>
-              <ul className="mt-2 space-y-1.5">
-                {[
-                  "Profesyonel ve deneyimli güzellik ekibi",
-                  "Hijyenik, modern ve konforlu salon ortamı",
-                  "Online randevu — üye olmadan da kolayca",
-                  "Üyelere özel indirim ve kampanyalar",
-                ].map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-center gap-2.5 whitespace-nowrap text-sm text-lotus-50 md:text-base"
-                  >
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-lotus-center text-[9px] font-bold text-lotus-900">
-                      ✓
-                    </span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <HeroShowcaseGrid settings={settings} />
         </div>
       </section>
 

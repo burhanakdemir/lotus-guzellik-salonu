@@ -1,6 +1,11 @@
 /** İstemci + sunucu — yalnızca URL dönüşümü (fs yok) */
 
-export type UploadSubdir = "services" | "gallery" | "reviews" | "promotions";
+export type UploadSubdir =
+  | "services"
+  | "gallery"
+  | "reviews"
+  | "promotions"
+  | "salon";
 
 export function uploadPublicUrl(subdir: UploadSubdir, filename: string): string {
   return `/api/files/${subdir}/${filename}`;

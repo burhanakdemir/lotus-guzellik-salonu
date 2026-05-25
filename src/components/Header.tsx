@@ -43,19 +43,18 @@ export async function Header() {
           <Link href="/yorumlar" className="transition hover:text-lotus-600">
             Yorumlar
           </Link>
-          <Link
-            href="/admin/giris"
-            className="transition hover:text-lotus-600"
-          >
-            Ustalar
-          </Link>
           <Link href="/randevu" className={headerBtn}>
             Randevu Al
           </Link>
           {session ? (
-            <LogoutButton className={headerBtn}>
-              Üye Çıkış
-            </LogoutButton>
+            <>
+              {session.role !== "ADMIN" && session.role !== "STAFF_ADMIN" && (
+                <Link href="/admin/giris" className={headerBtn}>
+                  Usta Girişi
+                </Link>
+              )}
+              <LogoutButton className={headerBtn}>Üye Çıkış</LogoutButton>
+            </>
           ) : (
             <>
               <Link href="/uye-ol" className={headerBtn}>
@@ -63,6 +62,9 @@ export async function Header() {
               </Link>
               <Link href="/giris" className={headerBtn}>
                 Üye Girişi
+              </Link>
+              <Link href="/admin/giris" className={headerBtn}>
+                Usta Girişi
               </Link>
             </>
           )}
@@ -97,8 +99,8 @@ export async function Header() {
         <Link href="/hakkimizda" className="hover:text-lotus-600">Hakkımızda</Link>
         <Link href="/galeri" className="hover:text-lotus-600">Galeri</Link>
         <Link href="/yorumlar" className="hover:text-lotus-600">Yorumlar</Link>
-        <Link href="/admin/giris" className="hover:text-lotus-600">
-          Ustalar
+        <Link href="/admin/giris" className="font-semibold text-lotus-600">
+          Usta Girişi
         </Link>
       </nav>
     </header>

@@ -244,6 +244,10 @@ body {
     font-size: 0.525rem;
   }
 
+  .services-category-nav__count::after {
+    content: none;
+  }
+
   .services-category-nav__count::before {
     content: "·";
     margin-right: 0.15rem;

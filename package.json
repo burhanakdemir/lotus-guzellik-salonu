@@ -5,12 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "dev:clean": "node scripts/dev-clean.mjs",
-    "prebuild": "node scripts/ensure-dirs.mjs && tsx scripts/ensure-images.ts",
+    "prebuild": "node scripts/ensure-dirs.mjs && npx tsx scripts/ensure-images.ts",
     "build": "next build",
     "start": "next start",
-    "start:prod": "tsx scripts/prod-setup.ts && next start",
-    "start:render": "tsx scripts/prod-setup.ts && next start -H 0.0.0.0",
-    "prod:setup": "tsx scripts/prod-setup.ts",
+    "start:prod": "npx tsx scripts/prod-setup.ts && next start",
+    "start:render": "npx tsx scripts/prod-setup.ts && next start -H 0.0.0.0",
+    "prod:setup": "npx tsx scripts/prod-setup.ts",
     "lint": "next lint",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
@@ -45,7 +45,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "web-push": "^3.6.7",
-    "zod": "^3.25.42"
+    "zod": "^3.25.42",
+    "tsx": "^4.19.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.8",
@@ -59,7 +60,6 @@
     "prisma": "^6.9.0",
     "tailwindcss": "^4.1.8",
     "sharp": "^0.34.2",
-    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }

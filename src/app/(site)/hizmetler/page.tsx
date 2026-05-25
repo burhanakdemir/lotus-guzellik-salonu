@@ -40,7 +40,7 @@ export default async function HizmetlerPage() {
       <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
         {sortedCategories.length > 0 && (
           <nav
-            className="services-category-nav sticky top-0 z-20 mb-12 border-b border-rose-100 bg-cream/95 py-4 backdrop-blur-sm"
+            className="services-category-nav sticky top-0 z-20 mb-12 border-b border-rose-100 bg-cream/95 py-2 backdrop-blur-sm"
             aria-label="Hizmet kategorileri"
           >
             <ul className="services-category-nav__grid">
@@ -54,7 +54,7 @@ export default async function HizmetlerPage() {
                       {getServiceCategoryLabel(cat)}
                     </span>
                     <span className="services-category-nav__count">
-                      {grouped[cat].length} hizmet
+                      {grouped[cat].length}
                     </span>
                   </a>
                 </li>

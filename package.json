@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "start:prod": "npx tsx scripts/prod-setup.ts && next start",
-    "start:render": "node scripts/render-start.mjs",
+    "start:render": "npx tsx scripts/prod-setup.ts && next start -H 0.0.0.0",
     "prod:setup": "npx tsx scripts/prod-setup.ts",
     "lint": "next lint",
     "docker:up": "docker compose up -d",

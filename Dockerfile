@@ -25,8 +25,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN apk add --no-cache libc6-compat
 
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/package.json ./package.json
@@ -38,4 +37,4 @@ RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh
 EXPOSE 3000
 VOLUME ["/app/public/uploads"]
 ENTRYPOINT ["sh", "docker-entrypoint.sh"]
-CMD ["node", "server.js"]
+CMD ["npx", "next", "start", "-H", "0.0.0.0"]

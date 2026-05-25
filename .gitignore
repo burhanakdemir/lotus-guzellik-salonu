@@ -10,6 +10,7 @@ node_modules
 .DS_Store
 
 # Yerel kaynak görseller (deploy için public/services yeterli)
-kategori resimleri/ (canlıda Render disk veya Docker volume)
+kategori resimleri/
+public/lotus-sade.png
 public/uploads/**/*
 !public/uploads/**/.gitkeep

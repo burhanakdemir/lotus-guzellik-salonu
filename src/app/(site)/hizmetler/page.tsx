@@ -25,22 +25,22 @@ export default async function HizmetlerPage() {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-br from-lotus-800 via-lotus-700 to-lotus-600 px-4 py-10 text-center text-white md:py-12">
+      <section className="services-page-hero relative overflow-hidden bg-gradient-to-br from-lotus-800 via-lotus-700 to-lotus-600 px-4 text-center text-white">
         <div className="hero-pattern absolute inset-0" />
         <div className="relative mx-auto max-w-3xl">
-          <h1 className="font-display text-4xl font-light md:text-5xl">
+          <h1 className="font-display text-3xl font-light md:text-4xl">
             Hizmetlerimiz
           </h1>
-          <p className="mt-3 text-sm text-rose-100/90 md:text-base">
+          <p className="mt-1 text-xs text-rose-100/90 md:text-sm">
             {sortedCategories.length} kategori · {services.length} hizmet
           </p>
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-4 lg:px-8 lg:py-5">
         {sortedCategories.length > 0 && (
           <nav
-            className="services-category-nav sticky top-0 z-20 mb-12 border-b border-rose-100 bg-cream/95 py-2 backdrop-blur-sm"
+            className="services-category-nav sticky top-0 z-20 mb-5 border-b border-rose-100 bg-cream/95 py-1.5 backdrop-blur-sm"
             aria-label="Hizmet kategorileri"
           >
             <ul className="services-category-nav__grid">

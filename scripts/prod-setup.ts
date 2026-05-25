@@ -1,15 +1,15 @@
 /**
  * Canlı sunucuda deploy / container başlangıcı:
- * - Klasörler + statik görseller (repoda JPG/SVG varsa ağ gerekmez)
+ * - Klasörler + statik görseller doğrula (indirme yok)
  * - Veritabanı şeması
- * - Seed yalnızca boş DB veya RUN_SEED=true iken (admin düzenlemelerini korur)
+ * - Admin şifre senkronu (Render env)
+ * - Hizmetler: yalnızca BOŞ DB'de deploy kilidi; mevcut DB'ye dokunulmaz
  */
 import { execSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
 import { ensureAdminUser } from "./ensure-admin";
-import { syncServicesCatalog } from "./sync-catalog";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -18,7 +18,6 @@ function run(cmd: string, label: string, env: NodeJS.ProcessEnv = process.env) {
   execSync(cmd, { cwd: root, stdio: "inherit", env });
 }
 
-/** Neon: şema push için direct URL; yoksa DATABASE_URL (Docker/yerel) */
 function databaseUrlForPush(): string {
   const url = process.env.DIRECT_URL || process.env.DATABASE_URL;
   if (!url) {
@@ -29,10 +28,13 @@ function databaseUrlForPush(): string {
 
 async function main() {
   console.log("LOTUS canlı kurulum başlıyor…");
+  console.log("→ Deploy kilidi: hizmet/görsel listesi deploy sırasında değiştirilmez.");
 
   run("node scripts/ensure-dirs.mjs", "Klasörler");
-  run("npx tsx scripts/prune-service-assets.ts", "Katalog dışı görselleri temizle");
-  run("npx tsx scripts/ensure-images.ts", "Statik görseller doğrula / hazırla");
+  run("npx tsx scripts/ensure-images.ts", "Statik görseller doğrula (sabit, indirme yok)", {
+    ...process.env,
+    DEPLOY_LOCK_IMAGES: "true",
+  });
   run("npx prisma generate", "Prisma client");
   run("npx prisma db push", "Veritabanı şeması", {
     ...process.env,
@@ -42,19 +44,33 @@ async function main() {
   const prisma = new PrismaClient();
   try {
     await ensureAdminUser(prisma);
-    await syncServicesCatalog(prisma);
 
-    const serviceCount = await prisma.service.count();
-    const runSeed =
-      process.env.RUN_SEED === "true" ||
-      process.env.RUN_SEED === "1" ||
-      serviceCount === 0;
+    const activeCount = await prisma.service.count({
+      where: { deletedAt: null, isActive: true },
+    });
+    const totalCount = await prisma.service.count();
 
-    if (runSeed) {
-      run("npx tsx prisma/seed.ts", "Hizmetler, kategoriler, salon ayarları, admin");
+    const forceLock =
+      process.env.FORCE_DEPLOY_LOCK === "true" ||
+      process.env.FORCE_DEPLOY_LOCK === "1";
+    const runSeed = process.env.RUN_SEED === "true" || process.env.RUN_SEED === "1";
+
+    if (totalCount === 0) {
+      run("node scripts/import-deploy-lock.mjs", "İlk kurulum: deploy kilidi (hizmetler)");
+      run("npx tsx prisma/seed.ts", "Salon ayarları, kampanya, admin profili", {
+        ...process.env,
+        SEED_SERVICES: "false",
+      });
+    } else if (runSeed && forceLock) {
+      console.log("\n→ RUN_SEED + FORCE_DEPLOY_LOCK: hizmet kilidi yeniden yükleniyor…");
+      run("node scripts/import-deploy-lock.mjs", "Deploy kilidi (zorla)");
+    } else if (runSeed) {
+      console.log(
+        "\n→ RUN_SEED atlandı (DB dolu). Hizmetleri kilitten yüklemek için FORCE_DEPLOY_LOCK=true"
+      );
     } else {
       console.log(
-        `\n→ Seed atlandı (${serviceCount} hizmet mevcut). Zorlamak için RUN_SEED=true`
+        `\n→ Hizmetler korundu (${activeCount} aktif / ${totalCount} toplam). Admin yüklemeleri ve fiyatlar aynı.`
       );
     }
   } finally {
@@ -68,4 +84,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-

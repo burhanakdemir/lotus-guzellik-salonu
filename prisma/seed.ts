@@ -78,44 +78,49 @@ Salonumuz hijyenik, modern ve konforlu bir ortamda sizleri ağırlamaktan mutlul
     },
   });
 
-  for (const s of servicesCatalog) {
-    const description = `${s.name} hizmetimiz profesyonel ekip ve kaliteli ürünlerle sunulmaktadır. Fiyatlar KDV dahildir.`;
-    await prisma.service.upsert({
-      where: { slug: s.slug },
-      update: {
-        name: s.name,
-        category: s.category,
-        durationMinutes: s.duration,
-        price: s.price,
-        isFeatured: s.featured ?? false,
-        isActive: true,
+  const seedServices = process.env.SEED_SERVICES !== "false";
+  if (seedServices) {
+    for (const s of servicesCatalog) {
+      const description = `${s.name} hizmetimiz profesyonel ekip ve kaliteli ürünlerle sunulmaktadır. Fiyatlar KDV dahildir.`;
+      await prisma.service.upsert({
+        where: { slug: s.slug },
+        update: {
+          name: s.name,
+          category: s.category,
+          durationMinutes: s.duration,
+          price: s.price,
+          isFeatured: s.featured ?? false,
+          isActive: true,
+          deletedAt: null,
+          description,
+        },
+        create: {
+          name: s.name,
+          slug: s.slug,
+          category: s.category,
+          durationMinutes: s.duration,
+          price: s.price,
+          isFeatured: s.featured ?? false,
+          isActive: true,
+          description,
+          imageUrl: null,
+        },
+      });
+    }
+
+    await prisma.service.updateMany({
+      where: {
+        slug: { notIn: catalogSlugs },
         deletedAt: null,
-        description,
       },
-      create: {
-        name: s.name,
-        slug: s.slug,
-        category: s.category,
-        durationMinutes: s.duration,
-        price: s.price,
-        isFeatured: s.featured ?? false,
-        isActive: true,
-        description,
-        imageUrl: null,
+      data: {
+        isActive: false,
+        deletedAt: new Date(),
       },
     });
+  } else {
+    console.log("→ Hizmet seed atlandı (deploy kilidi / SEED_SERVICES=false)");
   }
-
-  await prisma.service.updateMany({
-    where: {
-      slug: { notIn: catalogSlugs },
-      deletedAt: null,
-    },
-    data: {
-      isActive: false,
-      deletedAt: new Date(),
-    },
-  });
 
   const now = new Date();
   const weekStart = new Date(now);

@@ -1,7 +1,6 @@
 /**
- * Veritabanını prisma/services-catalog.ts ile hizalar.
- * - Katalogdaki hizmetler upsert (imageUrl=null → statik /services/{slug}.jpg)
- * - Katalog dışı aktif hizmetler pasifleştirilir
+ * YALNIZCA yerel/bilinçli kullanım — prod-setup ve deploy'da ÇALIŞTIRILMAZ.
+ * imageUrl güncellemede ezilmez (admin / statik görseller korunur).
  */
 import { PrismaClient } from "@prisma/client";
 import { catalogSlugs, servicesCatalog } from "../prisma/services-catalog";
@@ -20,7 +19,6 @@ export async function syncServicesCatalog(prisma: PrismaClient): Promise<void> {
         isActive: true,
         deletedAt: null,
         description,
-        imageUrl: null,
       },
       create: {
         name: s.name,

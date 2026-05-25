@@ -26,6 +26,8 @@
     "images:verify": "tsx scripts/verify-assets.ts",
     "assets:sync": "npx tsx scripts/prune-service-assets.ts && npx tsx scripts/ensure-images.ts",
     "assets:prune": "npx tsx scripts/prune-service-assets.ts",
+    "deploy-lock:export": "npx tsx scripts/export-deploy-lock.ts",
+    "deploy-lock:import": "node scripts/import-deploy-lock.mjs",
     "ensure:dirs": "node scripts/ensure-dirs.mjs",
     "db:studio": "prisma studio",
     "theme:save-tema1": "node scripts/save-tema1.mjs",

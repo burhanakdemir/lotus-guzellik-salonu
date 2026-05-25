@@ -12,7 +12,7 @@ services:
     branch: main
     # devDependencies (tsx, prisma, typescript) build ve start:render icin gerekli
     buildCommand: NPM_CONFIG_PRODUCTION=false npm ci && npm run build
-    startCommand: npm run start:render
+    startCommand: node scripts/render-start.mjs
     healthCheckPath: /
     autoDeployTrigger: commit
     disk:

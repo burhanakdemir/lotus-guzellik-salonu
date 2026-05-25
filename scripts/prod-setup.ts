@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
 import { ensureAdminUser } from "./ensure-admin";
+import { syncServicesCatalog } from "./sync-catalog";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -30,7 +31,8 @@ async function main() {
   console.log("LOTUS canlı kurulum başlıyor…");
 
   run("node scripts/ensure-dirs.mjs", "Klasörler");
-  run("npx tsx scripts/ensure-images.ts", "Statik görseller");
+  run("npx tsx scripts/prune-service-assets.ts", "Katalog dışı görselleri temizle");
+  run("npx tsx scripts/ensure-images.ts", "Statik görseller doğrula / hazırla");
   run("npx prisma generate", "Prisma client");
   run("npx prisma db push", "Veritabanı şeması", {
     ...process.env,
@@ -40,6 +42,7 @@ async function main() {
   const prisma = new PrismaClient();
   try {
     await ensureAdminUser(prisma);
+    await syncServicesCatalog(prisma);
 
     const serviceCount = await prisma.service.count();
     const runSeed =

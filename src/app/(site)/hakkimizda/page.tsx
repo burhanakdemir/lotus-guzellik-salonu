@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { getSalonSettingsSafe } from "@/lib/db-safe";
 
 export default async function HakkimizdaPage() {
@@ -16,7 +17,9 @@ export default async function HakkimizdaPage() {
 
   return (
     <div>
-      <section className="bg-gradient-to-b from-champagne to-cream px-4 py-20">
+      <MobilePageTitle title="Hakkımızda" />
+
+      <section className="site-desktop-only bg-gradient-to-b from-champagne to-cream px-4 py-20">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-gold-dark">
             Hikayemiz
@@ -29,7 +32,7 @@ export default async function HakkimizdaPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 md:py-16 lg:px-8">
         <div className="card max-w-3xl whitespace-pre-line text-lg leading-relaxed text-gray-700">
           {settings?.aboutContent}
         </div>

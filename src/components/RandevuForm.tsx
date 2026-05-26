@@ -65,6 +65,9 @@ export function RandevuForm({
   const totalSteps = hasStaffChoice ? 5 : 4;
 
   const [step, setStep] = useState(1);
+  const [mobileServiceCategory, setMobileServiceCategory] = useState<string | null>(
+    null
+  );
   const [assignedStaffId, setAssignedStaffId] = useState("");
   const [name, setName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
@@ -280,21 +283,32 @@ export function RandevuForm({
   const serviceStep = hasStaffChoice ? 3 : 2;
   const dateStep = hasStaffChoice ? 4 : 3;
 
+  const visibleServiceCategories = mobileServiceCategory
+    ? serviceCategories.filter((c) => c === mobileServiceCategory)
+    : serviceCategories;
+
   return (
-    <div className="card mx-auto max-w-lg shadow-xl shadow-rose-900/10">
-      <div className="mb-8">
+    <div className="randevu-form-touch card mx-auto max-w-lg shadow-xl shadow-rose-900/10">
+      <div className="mb-6 md:mb-8">
         <div className="flex gap-2">
           {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
             <div
               key={s}
-              className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
+              className={`h-1.5 flex-1 rounded-full transition-all duration-500 max-md:h-2 ${
                 step >= s ? "bg-gradient-to-r from-rose-700 to-gold" : "bg-rose-100"
               }`}
             />
           ))}
         </div>
-        <p className="mt-3 text-center text-xs font-medium uppercase tracking-wider text-gold-dark">
-          Adım {step}/{totalSteps} · {stepLabels[step - 1]}
+        <p className="mt-3 text-center text-xs font-medium uppercase tracking-wider text-gold-dark max-md:text-sm max-md:normal-case max-md:tracking-normal">
+          <span className="md:hidden">Adım {step}/{totalSteps} — </span>
+          <span className="max-md:font-semibold max-md:text-lotus-900">
+            {stepLabels[step - 1]}
+          </span>
+          <span className="hidden md:inline">
+            {" "}
+            · Adım {step}/{totalSteps}
+          </span>
         </p>
       </div>
 
@@ -416,20 +430,47 @@ export function RandevuForm({
 
       {step === serviceStep && (
         <div className="space-y-4">
-          <h2 className="font-semibold text-rose-900">Hizmet Seçin</h2>
+          <h2 className="font-semibold text-rose-900 max-md:sr-only">Hizmet Seçin</h2>
           {selectedStaff && (
             <p className="text-sm text-gray-600">
               Usta: <strong>{selectedStaff.label}</strong>
             </p>
           )}
-          <div className="max-h-[28rem] space-y-4 overflow-y-auto pr-1">
+          {serviceCategories.length > 1 && (
+            <div className="mobile-services-chips -mx-1 max-md:flex md:hidden">
+              <button
+                type="button"
+                className={`mobile-services-chip ${
+                  !mobileServiceCategory ? "mobile-services-chip--active" : ""
+                }`}
+                onClick={() => setMobileServiceCategory(null)}
+              >
+                Tümü
+              </button>
+              {serviceCategories.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`mobile-services-chip ${
+                    mobileServiceCategory === cat
+                      ? "mobile-services-chip--active"
+                      : ""
+                  }`}
+                  onClick={() => setMobileServiceCategory(cat)}
+                >
+                  {getServiceCategoryLabel(cat)}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="max-h-[28rem] space-y-4 overflow-y-auto pr-1 max-md:max-h-[22rem]">
             {availableServices.length === 0 ? (
               <p className="text-sm text-amber-700">
                 Bu usta için tanımlı hizmet yok. Ayarlardan hizmet yetkisi
                 ekleyin veya başka usta seçin.
               </p>
             ) : (
-              serviceCategories.map((cat) => (
+              visibleServiceCategories.map((cat) => (
                 <div key={cat}>
                   <h3 className="mb-2 border-b border-rose-100 pb-1 text-xs font-semibold uppercase tracking-wide text-lotus-700">
                     {getServiceCategoryLabel(cat)}
@@ -440,7 +481,7 @@ export function RandevuForm({
                         key={s.id}
                         type="button"
                         onClick={() => setServiceId(s.id)}
-                        className={`w-full rounded-2xl border p-4 text-left transition-all duration-300 ${
+                        className={`w-full rounded-2xl border p-4 text-left transition-all duration-300 max-md:min-h-[3rem] ${
                           serviceId === s.id
                             ? "border-rose-600 bg-gradient-to-br from-rose-50 to-champagne shadow-md ring-2 ring-gold/30"
                             : "border-rose-100 hover:border-rose-300 hover:shadow-sm"
@@ -546,13 +587,13 @@ export function RandevuForm({
           ) : slots.length === 0 ? (
             <p className="text-center text-gray-500">Müsait saat yok. Başka tarih seçin.</p>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 max-md:grid-cols-2">
               {slots.map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setStartTime(t)}
-                  className={`rounded-xl border py-3 text-sm font-medium transition-all ${
+                  className={`rounded-xl border py-3 text-sm font-medium transition-all max-md:min-h-[2.75rem] ${
                     startTime === t
                       ? "border-rose-700 bg-gradient-to-br from-rose-700 to-rose-900 text-white shadow-md"
                       : "border-rose-200 hover:border-gold hover:bg-champagne"

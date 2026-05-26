@@ -96,35 +96,6 @@ export async function Header() {
           )}
         </div>
       </div>
-
-      <nav
-        className="header-mobile-nav border-t border-lotus-100 px-3 py-2.5 md:hidden"
-        aria-label="Mobil menü"
-      >
-        <Link href="/" className="header-mobile-nav__link">
-          Ana Sayfa
-        </Link>
-        <Link href="/hizmetler" className="header-mobile-nav__link">
-          Hizmetler
-        </Link>
-        <Link href="/randevu" className="header-mobile-nav__link header-mobile-nav__link--accent">
-          Randevu
-        </Link>
-        <Link href="/galeri" className="header-mobile-nav__link">
-          Galeri
-        </Link>
-        <Link href="/yorumlar" className="header-mobile-nav__link">
-          Yorumlar
-        </Link>
-        {!session && (
-          <Link href="/giris" className="header-mobile-nav__link">
-            Giriş
-          </Link>
-        )}
-        <Link href="/admin/giris" className="header-mobile-nav__link">
-          Usta
-        </Link>
-      </nav>
     </header>
   );
 }

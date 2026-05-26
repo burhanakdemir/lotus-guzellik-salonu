@@ -1,4 +1,5 @@
 import { GalleryGrid } from "@/components/GalleryGrid";
+import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = {
@@ -21,7 +22,9 @@ export default async function GaleriPage() {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-br from-lotus-800 via-lotus-700 to-lotus-600 px-4 py-12 text-center text-white md:py-16">
+      <MobilePageTitle title="Galeri" />
+
+      <section className="site-desktop-only relative overflow-hidden bg-gradient-to-br from-lotus-800 via-lotus-700 to-lotus-600 px-4 py-12 text-center text-white md:py-16">
         <div className="hero-pattern absolute inset-0 opacity-30" />
         <div className="relative mx-auto max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-lotus-center">
@@ -34,8 +37,10 @@ export default async function GaleriPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
-        <GalleryGrid items={items} />
+      <div className="mx-auto max-w-7xl px-4 py-6 md:py-16 lg:px-8">
+        <div className="mobile-gallery-grid md:contents">
+          <GalleryGrid items={items} />
+        </div>
       </div>
     </div>
   );

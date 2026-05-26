@@ -9,6 +9,7 @@ import { WeeklyPromotions } from "@/components/WeeklyPromotions";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import { LogoutButton } from "@/components/LogoutButton";
+import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 
 export default async function HesabimPage() {
   const session = await getSession();
@@ -60,7 +61,8 @@ export default async function HesabimPage() {
 
   return (
     <HesabimPanel initialEmail={memberEmail}>
-      <div className="mx-auto max-w-4xl px-4 py-12">
+      <MobilePageTitle title="Hesabım" backHref="/" />
+      <div className="mx-auto max-w-4xl px-4 py-6 md:py-12">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-rose-900">Hesabım</h1>

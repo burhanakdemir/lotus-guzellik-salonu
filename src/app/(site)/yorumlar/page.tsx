@@ -1,4 +1,5 @@
 import { CustomerReviews } from "@/components/CustomerReviews";
+import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -38,7 +39,9 @@ export default async function YorumlarPage() {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-br from-lotus-800 via-lotus-700 to-lotus-600 px-4 py-12 text-center text-white md:py-16">
+      <MobilePageTitle title="Yorumlar" />
+
+      <section className="site-desktop-only relative overflow-hidden bg-gradient-to-br from-lotus-800 via-lotus-700 to-lotus-600 px-4 py-12 text-center text-white md:py-16">
         <div className="hero-pattern absolute inset-0 opacity-30" />
         <div className="relative mx-auto max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-lotus-center">
@@ -53,7 +56,7 @@ export default async function YorumlarPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-6 md:py-16 lg:px-8">
         <CustomerReviews initialReviews={initialReviews} member={member} />
       </div>
     </div>

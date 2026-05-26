@@ -1,17 +1,10 @@
-import { Footer } from "@/components/Footer";
-import { Header } from "@/components/Header";
+import { SiteChrome } from "@/components/SiteChrome";
 
-/** Müşteri sitesi — üst menü ve alt bilgi */
+/** Müşteri sitesi — masaüstü header/footer + mobil alt menü */
 export default function SiteLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <>
-      <Header />
-      <main className="flex-1">{children}</main>
-      <Footer />
-    </>
-  );
+  return <SiteChrome>{children}</SiteChrome>;
 }

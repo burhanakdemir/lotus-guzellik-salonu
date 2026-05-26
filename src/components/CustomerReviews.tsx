@@ -203,10 +203,16 @@ export function CustomerReviews({
   }
 
   return (
-    <div className="grid gap-12 lg:grid-cols-5">
+    <div className="grid gap-12 max-md:flex max-md:flex-col-reverse lg:grid-cols-5">
       <div className="lg:col-span-2">
-        <div className="card sticky top-24 !p-4 md:!p-5">
-          <h2 className="font-display text-xl text-lotus-900 md:text-2xl">Yorum Yazın</h2>
+        <details className="max-md:card max-md:overflow-hidden md:contents">
+          <summary className="cursor-pointer list-none px-4 py-3 font-display text-lg font-semibold text-lotus-900 md:hidden [&::-webkit-details-marker]:hidden">
+            Yorum yazın +
+          </summary>
+          <div className="card max-md:!rounded-none max-md:!border-0 max-md:!shadow-none max-md:ring-0 md:sticky md:top-24 md:!p-5">
+          <h2 className="hidden font-display text-xl text-lotus-900 md:block md:text-2xl">
+            Yorum Yazın
+          </h2>
           <p className="mt-1 text-xs leading-snug text-gray-500 md:text-sm">
             {member.isMember
               ? `${member.name}, deneyiminizi paylaşın. Yorumunuz onaylandıktan sonra yayınlanır.`
@@ -337,10 +343,11 @@ export function CustomerReviews({
               {loading ? "Gönderiliyor..." : "Yorumu Gönder"}
             </button>
           </form>
-        </div>
+          </div>
+        </details>
       </div>
 
-      <div className="lg:col-span-3">
+      <div className="lg:col-span-3 max-md:order-1">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-display text-2xl text-lotus-900">Onaylı Yorumlar</h2>
           <button

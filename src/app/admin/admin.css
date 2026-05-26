@@ -350,6 +350,17 @@ body:has(.admin-shell) {
   align-items: center;
   justify-content: center;
   background: #f3f4f6;
+  overflow-y: auto;
+  padding: 1rem 0.75rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .admin-giris-only {
+    align-items: flex-start;
+    padding-top: 1.25rem;
+    padding-bottom: 5.5rem;
+  }
 }
 
 .admin-shell h1 {

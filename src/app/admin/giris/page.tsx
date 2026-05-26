@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 type Step = "credentials" | "totp" | "totp-setup";
 
@@ -16,30 +15,44 @@ export default function AdminGirisPage() {
   const [pendingToken, setPendingToken] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [setupSeal, setSetupSeal] = useState("");
+  const [qrLoading, setQrLoading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const initSetup = useCallback(async (token: string) => {
-    const res = await fetch("/api/auth/totp/setup-init", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pendingToken: token }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error || "Authenticator kurulumu başlatılamadı.");
+    setQrLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/totp/setup-init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pendingToken: token }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Authenticator kurulumu başlatılamadı.");
+        setQrDataUrl(null);
+        setSetupSeal("");
+        return false;
+      }
+      if (!data.qrDataUrl || typeof data.qrDataUrl !== "string") {
+        setError("QR kodu oluşturulamadı. Tekrar deneyin.");
+        setQrDataUrl(null);
+        setSetupSeal("");
+        return false;
+      }
+      setQrDataUrl(data.qrDataUrl);
+      setSetupSeal(data.setupSeal ?? "");
+      return true;
+    } catch {
+      setError("QR kodu yüklenemedi. İnternet bağlantınızı kontrol edin.");
+      setQrDataUrl(null);
+      setSetupSeal("");
       return false;
+    } finally {
+      setQrLoading(false);
     }
-    setQrDataUrl(data.qrDataUrl);
-    setSetupSeal(data.setupSeal);
-    return true;
   }, []);
-
-  useEffect(() => {
-    if (step === "totp-setup" && pendingToken && !qrDataUrl) {
-      void initSetup(pendingToken);
-    }
-  }, [step, pendingToken, qrDataUrl, initSetup]);
 
   async function handleCredentials(e: React.FormEvent) {
     e.preventDefault();
@@ -59,8 +72,11 @@ export default function AdminGirisPage() {
         return;
       }
       if (data.requiresTotpSetup) {
-        setPendingToken(data.pendingToken);
+        const token = data.pendingToken as string;
+        setPendingToken(token);
         setStep("totp-setup");
+        setTotpCode("");
+        await initSetup(token);
         return;
       }
 
@@ -204,18 +220,29 @@ export default function AdminGirisPage() {
           <p className="text-xs text-gray-600">
             İlk kurulum: Google Authenticator ile QR kodu okutun.
           </p>
-          {qrDataUrl ? (
-            <Image
-              src={qrDataUrl}
-              alt="Authenticator QR"
-              width={160}
-              height={160}
-              unoptimized
-              className="mx-auto rounded-lg border border-rose-100"
-            />
-          ) : (
-            <p className="text-center text-xs text-gray-400">QR yükleniyor…</p>
-          )}
+          <div className="flex min-h-[12rem] flex-col items-center justify-center">
+            {qrLoading ? (
+              <p className="text-center text-xs text-gray-400">QR kodu hazırlanıyor…</p>
+            ) : qrDataUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- data: URL; next/image desteklemez
+              <img
+                src={qrDataUrl}
+                alt="Google Authenticator QR kodu"
+                width={200}
+                height={200}
+                className="mx-auto max-w-full rounded-lg border border-rose-100 bg-white p-2"
+              />
+            ) : (
+              <button
+                type="button"
+                className="btn-secondary text-xs"
+                disabled={!pendingToken || qrLoading}
+                onClick={() => pendingToken && void initSetup(pendingToken)}
+              >
+                QR kodunu yükle
+              </button>
+            )}
+          </div>
           <input
             className="input text-center text-lg tracking-[0.3em]"
             placeholder="000000"

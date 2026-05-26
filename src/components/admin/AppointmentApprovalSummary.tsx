@@ -1,11 +1,17 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import type { CalendarAppointment } from "@/components/admin/AppointmentsCalendar";
-import { formatPhoneDisplay } from "@/lib/phone";
+import { AdminAppointmentBlock } from "@/components/admin/AdminAppointmentBlock";
+import { adminAppointmentStatusHref } from "@/lib/staff-display-name";
 
 type Props = {
   pending: CalendarAppointment[];
+  /** Tüm onay bekleyenler (tarih sınırı yok); sekme filtresi yokken rozet */
+  pendingCount?: number;
+  /** Onaylı (CONFIRMED) toplam */
+  confirmedCount?: number;
   canEdit: (apt: CalendarAppointment) => boolean;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
@@ -13,12 +19,18 @@ type Props = {
   statusSaving?: boolean;
   showStaff?: boolean;
   dailyPanel?: ReactNode;
+  /** Sekme ile filtrelenmiş bekleyen sayısı (varsa rozet) */
+  displayPendingCount?: number;
+  /** Süper admin usta sekmesinde liste URL parametresi */
+  statusListStaffSlug?: string | null;
   /** @deprecated Yalnızca uyumluluk; grid artık CSS ile */
   compact?: boolean;
 };
 
 export function AppointmentApprovalSummary({
   pending,
+  pendingCount,
+  confirmedCount = 0,
   canEdit,
   onApprove,
   onReject,
@@ -26,21 +38,34 @@ export function AppointmentApprovalSummary({
   statusSaving = false,
   showStaff = false,
   dailyPanel,
+  displayPendingCount,
+  statusListStaffSlug = null,
   compact: _compact,
 }: Props) {
+  const badgePending =
+    displayPendingCount ?? pendingCount ?? pending.length;
+  const pendingHref = adminAppointmentStatusHref("pending", statusListStaffSlug);
+  const confirmedHref = adminAppointmentStatusHref(
+    "confirmed",
+    statusListStaffSlug
+  );
+
   const pendingSection = (
     <section className="card space-y-2">
-      <div className="flex flex-wrap items-center justify-between gap-1">
+      <Link
+        href={pendingHref}
+        className="flex flex-wrap items-center justify-between gap-1 rounded-md -m-1 p-1 transition hover:bg-amber-50/80"
+      >
         <h3 className="!mb-0 text-sm font-semibold text-lotus-800">
           Onay bekleyen randevular
         </h3>
         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
-          {pending.length}
+          {badgePending}
         </span>
-      </div>
+      </Link>
       <p className="text-[10px] text-gray-500">
-        Müşteri randevuları usta onayı olmadan onaylanmaz. Süper admin tüm
-        randevuları onaylayabilir.
+        Müşteri randevuları usta onayı olmadan onaylanmaz. Başlığa tıklayarak
+        tüm listeyi görün.
       </p>
       {pending.length === 0 ? (
         <p className="text-[11px] text-gray-500">Bekleyen randevu yok.</p>
@@ -53,23 +78,10 @@ export function AppointmentApprovalSummary({
             >
               <button
                 type="button"
-                className="w-full text-left"
+                className="w-full min-w-0 text-left"
                 onClick={() => onSelect?.(a)}
               >
-                <span className="block text-[11px] font-semibold text-gray-900">
-                  {a.startTime}–{a.endTime} · {a.service.name}
-                </span>
-                <span className="text-[10px] text-gray-600">
-                  {a.name} · {formatPhoneDisplay(a.phone)}
-                </span>
-                <span className="text-[10px] text-gray-500">
-                  {a.date}
-                  {showStaff && a.assignedStaff
-                    ? ` · ${a.assignedStaff.label}`
-                    : !a.assignedStaffId
-                      ? " · Usta atanmadı"
-                      : ""}
-                </span>
+                <AdminAppointmentBlock apt={a} showStaff={showStaff} />
               </button>
               {canEdit(a) && (
                 <div className="mt-1 flex flex-wrap gap-1">
@@ -95,16 +107,50 @@ export function AppointmentApprovalSummary({
           ))}
         </ul>
       )}
+      {badgePending > pending.length && (
+        <p className="text-[10px] text-gray-500">
+          <Link href={pendingHref} className="admin-link">
+            Tümünü gör ({badgePending})
+          </Link>
+        </p>
+      )}
+    </section>
+  );
+
+  const confirmedSection = (
+    <section className="card space-y-1">
+      <Link
+        href={confirmedHref}
+        className="flex flex-wrap items-center justify-between gap-1 rounded-md -m-1 p-1 transition hover:bg-lotus-50/80"
+      >
+        <h3 className="!mb-0 text-sm font-semibold text-lotus-800">
+          Onaylı randevularınız
+        </h3>
+        <span className="rounded-full bg-lotus-100 px-2 py-0.5 text-[10px] font-semibold text-lotus-900">
+          {confirmedCount}
+        </span>
+      </Link>
+      <p className="text-[10px] text-gray-500">
+        Onaylanmış randevuların tam listesi için tıklayın.
+      </p>
     </section>
   );
 
   if (!dailyPanel) {
-    return <div className="apt-approval-summary">{pendingSection}</div>;
+    return (
+      <div className="apt-approval-summary space-y-2">
+        {pendingSection}
+        {confirmedSection}
+      </div>
+    );
   }
 
   return (
     <div className="apt-approval-summary">
-      {pendingSection}
+      <div className="apt-approval-summary__side space-y-2">
+        {pendingSection}
+        {confirmedSection}
+      </div>
       {dailyPanel}
     </div>
   );

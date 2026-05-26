@@ -1,5 +1,6 @@
-import { createHmac, randomBytes, timingSafeEqual } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { generateSecret, generateURI, verify } from "otplib";
+import { getJwtSecretKey } from "@/lib/jwt-secret";
 
 const ISSUER = process.env.TOTP_ISSUER || "LOTUS Admin";
 
@@ -55,8 +56,9 @@ export function openPendingSetupSecret(
 }
 
 function sign(data: string): string {
-  const key = process.env.JWT_SECRET || "fallback-secret-change-in-production-32chars";
-  return createHmac("sha256", key).update(data).digest("base64url");
+  return createHmac("sha256", getJwtSecretKey())
+    .update(data)
+    .digest("base64url");
 }
 
 function verifySig(data: string, sig: string): boolean {

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { getSalonDisplaySettings } from "@/lib/salon-display";
+import { getStaffDisplayName } from "@/lib/staff-display-name";
 import { orderStaffProfilesForPanel } from "@/lib/staff-panel";
 import { isMultiAdminEnabled } from "@/lib/staff-admin";
 import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
@@ -38,12 +39,17 @@ export default async function RandevuPage({
           label: true,
           color: true,
           sortOrder: true,
+          user: { select: { name: true } },
           services: { select: { serviceId: true } },
         },
       })
     : [];
 
-  const staffOptions = orderStaffProfilesForPanel(staffRaw);
+  const staffOptions = orderStaffProfilesForPanel(staffRaw).map((s) => ({
+    id: s.id,
+    label: getStaffDisplayName(s),
+    color: s.color,
+  }));
   const staffServiceMap: Record<string, string[] | null> = {};
   for (const s of staffRaw) {
     staffServiceMap[s.id] =

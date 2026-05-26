@@ -7,6 +7,7 @@ const schema = z.object({
   serviceId: z.string(),
   phone: z.string().optional(),
   assignedStaffId: z.string().optional(),
+  excludeAppointmentId: z.string().optional(),
 });
 
 export async function GET(req: Request) {
@@ -17,12 +18,14 @@ export async function GET(req: Request) {
       serviceId: searchParams.get("serviceId"),
       phone: searchParams.get("phone") || undefined,
       assignedStaffId: searchParams.get("assignedStaffId") || undefined,
+      excludeAppointmentId: searchParams.get("excludeAppointmentId") || undefined,
     });
     const result = await getAvailableSlots(
       parsed.date,
       parsed.serviceId,
       parsed.phone,
-      parsed.assignedStaffId
+      parsed.assignedStaffId,
+      parsed.excludeAppointmentId
     );
     return NextResponse.json(result);
   } catch {

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { canEditAppointment, type AppointmentActor } from "@/lib/admin-permissions";
 import { isSuperAdmin } from "@/lib/staff-admin";
 import { deliverMemberNotifications } from "@/lib/member-notifications";
+import { staffAdminProfileNameSelect } from "@/lib/staff-display-name";
 
 export function pendingApprovalLabel(): string {
   return "Onay bekliyor";
@@ -55,7 +56,7 @@ export async function approveAppointment(
     },
     include: {
       service: true,
-      assignedStaff: { select: { id: true, slug: true, label: true, color: true } },
+      assignedStaff: { select: staffAdminProfileNameSelect },
     },
   });
 

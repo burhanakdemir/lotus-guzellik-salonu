@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { format, isSameMonth } from "date-fns";
 import { tr } from "date-fns/locale";
 import {
@@ -18,6 +18,10 @@ import { todayString } from "@/lib/timezone";
 import { formatPhoneDisplay } from "@/lib/phone";
 import { minutesToTime, timeToMinutes } from "@/lib/time-format";
 import { canEditAppointment } from "@/lib/admin-permissions";
+import { AdminAppointmentBlock } from "@/components/admin/AdminAppointmentBlock";
+import { AppointmentViewModal } from "@/components/admin/AppointmentViewModal";
+import { EditAppointmentModal } from "@/components/admin/EditAppointmentModal";
+import { getAppointmentMemberDisplayName } from "@/lib/admin-appointment-line";
 import type { AdminServiceOption } from "@/components/admin/AppointmentsAdmin";
 import { AppointmentApprovalSummary } from "@/components/admin/AppointmentApprovalSummary";
 import { DailyAppointmentsCard } from "@/components/admin/DailyAppointmentsCard";
@@ -29,6 +33,9 @@ import {
 export interface CalendarAppointment {
   id: string;
   name: string;
+  user?: { name: string } | null;
+  /** Sunucuda telefon/üye ile çözümlenmiş görünen ad */
+  memberDisplayName?: string;
   phone: string;
   date: string;
   startTime: string;
@@ -40,8 +47,9 @@ export interface CalendarAppointment {
     slug: string;
     label: string;
     color: string | null;
+    user?: { name: string } | null;
   } | null;
-  service: { name: string };
+  service: { id: string; name: string };
 }
 
 const statuses = ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"];
@@ -85,9 +93,15 @@ export function AppointmentsCalendar({
   assignStaffIdForCreate = null,
   defaultView = "month",
   pinnedDailyPanel = false,
+  pendingTotalCount,
+  confirmedTotalCount = 0,
+  statusListStaffSlug = null,
+  initialLoadedRange = null,
 }: {
   initialAppointments: CalendarAppointment[];
   initialCursor?: string;
+  /** SSR ile yüklenen aralık — ilk mount’ta tekrar fetch etme */
+  initialLoadedRange?: { from: string; to: string } | null;
   services: AdminServiceOption[];
   isSuperAdmin?: boolean;
   currentStaffProfileId?: string | null;
@@ -97,6 +111,10 @@ export function AppointmentsCalendar({
   assignStaffIdForCreate?: string | null;
   defaultView?: CalendarView;
   pinnedDailyPanel?: boolean;
+  pendingTotalCount?: number;
+  confirmedTotalCount?: number;
+  /** Usta sekmesinde liste sayfalarına personel parametresi */
+  statusListStaffSlug?: string | null;
 }) {
   const [view, setView] = useState<CalendarView>(defaultView);
   const [cursor, setCursor] = useState(() => parseDateKey(initialCursor));
@@ -109,6 +127,10 @@ export function AppointmentsCalendar({
     date: string;
     startTime: string;
   } | null>(null);
+  const [viewAppointment, setViewAppointment] =
+    useState<CalendarAppointment | null>(null);
+  const [editAppointment, setEditAppointment] =
+    useState<CalendarAppointment | null>(null);
 
   const actor = {
     role: (isSuperAdmin ? "ADMIN" : "STAFF_ADMIN") as "ADMIN" | "STAFF_ADMIN",
@@ -143,6 +165,8 @@ export function AppointmentsCalendar({
     [visibleAppointments]
   );
 
+  const skippedInitialRange = useRef(false);
+
   const loadRange = useCallback(async (from: string, to: string) => {
     setLoading(true);
     try {
@@ -156,14 +180,21 @@ export function AppointmentsCalendar({
   }, []);
 
   useEffect(() => {
+    if (
+      initialLoadedRange &&
+      !skippedInitialRange.current &&
+      range.from === initialLoadedRange.from &&
+      range.to === initialLoadedRange.to
+    ) {
+      skippedInitialRange.current = true;
+      return;
+    }
     loadRange(range.from, range.to);
-  }, [range.from, range.to, loadRange]);
+  }, [range.from, range.to, loadRange, initialLoadedRange]);
 
   async function applyAppointmentUpdate(updated: CalendarAppointment) {
     setAppointments((prev) =>
-      prev.map((a) =>
-        a.id === updated.id ? { ...a, ...updated, service: a.service } : a
-      )
+      prev.map((a) => (a.id === updated.id ? { ...a, ...updated } : a))
     );
   }
 
@@ -342,6 +373,18 @@ export function AppointmentsCalendar({
     setSelectedId(apt.id);
   }
 
+  function handleDayScheduleSelect(apt: CalendarAppointment) {
+    setCreateSlot(null);
+    setSelectedId(null);
+    setViewAppointment(apt);
+  }
+
+  function handleAppointmentSaved(updated: CalendarAppointment) {
+    applyAppointmentUpdate(updated);
+    setEditAppointment(null);
+    setViewAppointment(null);
+  }
+
   function handleSlotClick(startTime: string) {
     if (!canCreate) return;
     setSelectedId(null);
@@ -353,12 +396,15 @@ export function AppointmentsCalendar({
       {pinnedDailyPanel && (
         <AppointmentApprovalSummary
           pending={pendingQueue}
+          pendingCount={pendingTotalCount}
+          confirmedCount={confirmedTotalCount}
+          statusListStaffSlug={statusListStaffSlug}
           canEdit={canEdit}
           onApprove={approveAppointmentById}
           onReject={rejectAppointmentById}
-          onSelect={handleSelect}
+          onSelect={handleDayScheduleSelect}
           statusSaving={statusSaving}
-          showStaff={multiAdminEnabled}
+          showStaff={multiAdminEnabled && !filterStaffProfileId}
           dailyPanel={
             <DailyAppointmentsCard
               cursor={cursor}
@@ -368,7 +414,7 @@ export function AppointmentsCalendar({
               canCreate={canCreate}
               canEdit={canEdit}
               highlightStaffProfileId={highlightStaffProfileId}
-              onSelect={handleSelect}
+              onSelect={handleDayScheduleSelect}
               onSlotClick={handleSlotClick}
               hint={
                 canCreate && multiAdminEnabled && !isSuperAdmin ? (
@@ -447,8 +493,29 @@ export function AppointmentsCalendar({
           canCreate={canCreate}
           canEdit={canEdit}
           highlightStaffProfileId={highlightStaffProfileId}
-          onSelect={handleSelect}
+          onSelect={handleDayScheduleSelect}
           onSlotClick={handleSlotClick}
+        />
+      )}
+
+      {viewAppointment && !editAppointment && (
+        <AppointmentViewModal
+          apt={viewAppointment}
+          multiAdminEnabled={multiAdminEnabled}
+          canEdit={canEdit(viewAppointment)}
+          onClose={() => setViewAppointment(null)}
+          onEdit={() => setEditAppointment(viewAppointment)}
+        />
+      )}
+
+      {editAppointment && (
+        <EditAppointmentModal
+          apt={editAppointment}
+          services={services}
+          onClose={() => {
+            setEditAppointment(null);
+          }}
+          onSaved={handleAppointmentSaved}
         />
       )}
 
@@ -465,18 +532,13 @@ export function AppointmentsCalendar({
       {selected && (
         <div className="card apt-calendar__detail">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <p className="font-semibold text-lotus-800">{selected.name}</p>
-              <p className="text-[11px] text-gray-500">{selected.phone}</p>
-              <p className="mt-1 text-[11px]">
-                {selected.date} · {selected.startTime}–{selected.endTime}
-              </p>
-              <p className="text-[11px] text-gray-600">{selected.service.name}</p>
-              {selected.assignedStaff && (
-                <p className="mt-1 text-[10px] text-lotus-600">
-                  Usta: {selected.assignedStaff.label}
-                </p>
-              )}
+            <div className="min-w-0 flex-1">
+              <AdminAppointmentBlock
+                apt={selected}
+                showStaff={multiAdminEnabled}
+                headlineClassName="text-[12px] font-semibold text-lotus-800"
+                rowClassName="text-[11px] text-gray-600"
+              />
             </div>
             <div className="flex flex-col items-end gap-1">
               {!canEdit(selected) && multiAdminEnabled && !isSuperAdmin && (
@@ -567,6 +629,7 @@ function AptChip({
   compact?: boolean;
   onSelect: (a: CalendarAppointment) => void;
 }) {
+  const label = getAppointmentMemberDisplayName(apt);
   return (
     <button
       type="button"
@@ -575,12 +638,12 @@ function AptChip({
         e.stopPropagation();
         onSelect(apt);
       }}
-      title={`${apt.name} — ${apt.service.name}`}
+      title={`${label} — ${apt.service.name}`}
     >
       {!compact && <span className="apt-chip__time">{apt.startTime}</span>}
       <span className="apt-chip__name truncate">
         {compact ? `${apt.startTime} ` : ""}
-        {apt.name}
+        {label}
       </span>
     </button>
   );
@@ -617,14 +680,25 @@ function MonthView({
           const isDayToday = key === todayKey;
 
           return (
-            <button
+            <div
               key={key}
-              type="button"
+              role="button"
+              tabIndex={0}
               className={`apt-calendar__day-cell ${!inMonth ? "apt-calendar__day-cell--muted" : ""} ${isDayToday ? "apt-calendar__day-cell--today" : ""}`}
               onClick={() => onDayClick(key)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onDayClick(key);
+                }
+              }}
             >
               <span className="apt-calendar__day-num">{format(day, "d")}</span>
-              <div className="apt-calendar__day-events">
+              <div
+                className="apt-calendar__day-events"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
                 {dayApts.slice(0, 3).map((a) => (
                   <AptChip key={a.id} apt={a} compact onSelect={onSelect} />
                 ))}
@@ -634,7 +708,7 @@ function MonthView({
                   </span>
                 )}
               </div>
-            </button>
+            </div>
           );
         })}
       </div>

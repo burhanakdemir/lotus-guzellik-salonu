@@ -1,8 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
-
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "fallback-secret-change-in-production-32chars"
-);
+import { getJwtSecretBytes } from "@/lib/jwt-secret";
 
 export type TotpPendingPayload = {
   userId: string;
@@ -16,14 +13,14 @@ export async function createTotpPendingToken(
   return new SignJWT({ userId, purpose })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("10m")
-    .sign(secret);
+    .sign(getJwtSecretBytes());
 }
 
 export async function verifyTotpPendingToken(
   token: string
 ): Promise<TotpPendingPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getJwtSecretBytes());
     const userId = payload.userId as string;
     const purpose = payload.purpose as TotpPendingPayload["purpose"];
     if (!userId || !purpose) return null;

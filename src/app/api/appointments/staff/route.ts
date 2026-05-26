@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getStaffDisplayName } from "@/lib/staff-display-name";
 import { orderStaffProfilesForPanel } from "@/lib/staff-panel";
 import { getStaffIdsEligibleForService } from "@/lib/staff-services";
 import { isMultiAdminEnabled } from "@/lib/staff-admin";
@@ -15,7 +16,13 @@ export async function GET(req: Request) {
   const profiles = await prisma.staffAdminProfile.findMany({
     where: { isActive: true },
     orderBy: { sortOrder: "asc" },
-    select: { id: true, label: true, color: true, sortOrder: true },
+    select: {
+      id: true,
+      label: true,
+      color: true,
+      sortOrder: true,
+      user: { select: { name: true } },
+    },
   });
 
   let filtered = profiles;
@@ -25,8 +32,10 @@ export async function GET(req: Request) {
   }
 
   return NextResponse.json({
-    staff: orderStaffProfilesForPanel(filtered).map(
-      ({ id, label, color }) => ({ id, label, color })
-    ),
+    staff: orderStaffProfilesForPanel(filtered).map((p) => ({
+      id: p.id,
+      label: getStaffDisplayName(p),
+      color: p.color,
+    })),
   });
 }

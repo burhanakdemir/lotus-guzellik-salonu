@@ -2,10 +2,7 @@ import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isStaffAdminPath } from "@/lib/admin-permissions";
-
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "fallback-secret-change-in-production-32chars"
-);
+import { getJwtSecretBytes } from "@/lib/jwt-secret";
 
 const MULTI_ADMIN = process.env.MULTI_ADMIN_ENABLED === "true";
 
@@ -40,7 +37,7 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getJwtSecretBytes());
     const role = payload.role as string;
 
     if (role !== "ADMIN" && role !== "STAFF_ADMIN") {

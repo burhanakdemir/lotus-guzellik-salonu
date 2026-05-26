@@ -11,6 +11,9 @@ import {
   type StaffProfileTab,
 } from "@/components/admin/StaffPersonelTabs";
 import { canEditAppointment } from "@/lib/admin-permissions";
+import type { StaffStatusCounts } from "@/lib/admin-appointment-status";
+import { countsForStaffProfile } from "@/lib/admin-appointment-status";
+import { adminAppointmentStatusHref } from "@/lib/staff-display-name";
 import { parseDateKey, toDateKey } from "@/lib/calendar-dates";
 import type { SalonDaySchedule } from "@/lib/salon-schedule";
 
@@ -35,6 +38,9 @@ type Props = {
   initialDaySchedule: SalonDaySchedule;
   memberCount?: number;
   weekAppointments?: number;
+  pendingTotalCount?: number;
+  confirmedTotalCount?: number;
+  staffStatusCountMap?: Record<string, StaffStatusCounts> | null;
 };
 
 export function AdminDashboardPanels({
@@ -50,6 +56,9 @@ export function AdminDashboardPanels({
   initialDaySchedule,
   memberCount = 0,
   weekAppointments = 0,
+  pendingTotalCount,
+  confirmedTotalCount = 0,
+  staffStatusCountMap = null,
 }: Props) {
   const showStaffTabs = multiAdminEnabled && staffProfiles.length > 0;
 
@@ -137,17 +146,42 @@ export function AdminDashboardPanels({
     [filteredDay]
   );
 
-  const statsPending = filteredPending.length;
+  const scopedStatusCounts = useMemo(() => {
+    if (staffStatusCountMap) {
+      return countsForStaffProfile(staffStatusCountMap, activeStaffId);
+    }
+    return {
+      pending: pendingTotalCount ?? filteredPending.length,
+      confirmed: confirmedTotalCount,
+    };
+  }, [
+    staffStatusCountMap,
+    activeStaffId,
+    pendingTotalCount,
+    confirmedTotalCount,
+    filteredPending.length,
+  ]);
+
+  const statsPending = scopedStatusCounts.pending;
   const statsToday = filteredDay.length;
+  const displayPendingCount = scopedStatusCounts.pending;
+  const displayConfirmedCount = scopedStatusCounts.confirmed;
+  const statusListStaffSlug = activeProfile?.slug ?? null;
 
   const pendingCountFor = useMemo(() => {
+    if (staffStatusCountMap) {
+      return (staffId: string | null) =>
+        countsForStaffProfile(staffStatusCountMap, staffId).pending;
+    }
     return (staffId: string | null) => {
-      if (staffId === null) return pending.filter((a) => a.status === "PENDING").length;
+      if (staffId === null) {
+        return pending.filter((a) => a.status === "PENDING").length;
+      }
       return pending.filter(
         (a) => a.status === "PENDING" && a.assignedStaffId === staffId
       ).length;
     };
-  }, [pending]);
+  }, [pending, staffStatusCountMap]);
 
   function applyUpdate(updated: CalendarAppointment) {
     setPending((prev) => prev.filter((a) => a.id !== updated.id));
@@ -213,7 +247,7 @@ export function AdminDashboardPanels({
 
   const highlightId = activeStaffId ?? currentStaffProfileId ?? undefined;
   const panelTitle = activeProfile
-    ? activeProfile.label
+    ? activeProfile.displayName
     : showStaffTabs
       ? "Tüm ustalar"
       : null;
@@ -245,12 +279,15 @@ export function AdminDashboardPanels({
       )}
 
       <div className="admin-stats">
-        <div className="card admin-stat-card">
+        <Link
+          href={adminAppointmentStatusHref("pending", statusListStaffSlug)}
+          className="card admin-stat-card admin-stat-card--link"
+        >
           <p className="admin-stat-card__label">Onay bekleyen</p>
           <p className="admin-stat-card__value admin-stat-card__value--amber">
             {statsPending}
           </p>
-        </div>
+        </Link>
         <div className="card admin-stat-card">
           <p className="admin-stat-card__label">Bugün</p>
           <p className="admin-stat-card__value admin-stat-card__value--lotus">
@@ -277,6 +314,10 @@ export function AdminDashboardPanels({
 
       <AppointmentApprovalSummary
         pending={pendingSorted}
+        pendingCount={pendingTotalCount}
+        displayPendingCount={displayPendingCount}
+        confirmedCount={displayConfirmedCount}
+        statusListStaffSlug={statusListStaffSlug}
         canEdit={canEdit}
         onApprove={approve}
         onReject={reject}
@@ -315,7 +356,7 @@ export function AdminDashboardPanels({
           className="admin-link"
         >
           {activeProfile
-            ? `${activeProfile.label} takvimi →`
+            ? `${activeProfile.displayName} takvimi →`
             : "Takvimde randevu ekle veya düzenle →"}
         </Link>
       </p>

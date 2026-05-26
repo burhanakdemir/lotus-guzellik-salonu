@@ -15,10 +15,9 @@ import { createTotpPendingToken } from "./totp-pending";
 
 export { hashPassword, verifyPassword } from "./password";
 
+import { getJwtSecretBytes } from "@/lib/jwt-secret";
+
 const COOKIE_NAME = "lotus_session";
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "fallback-secret-change-in-production-32chars"
-);
 
 export interface SessionUser {
   id: string;
@@ -77,14 +76,14 @@ export async function createToken(user: SessionUser): Promise<string> {
   })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("7d")
-    .sign(secret);
+    .sign(getJwtSecretBytes());
 }
 
 export async function verifyToken(
   token: string
 ): Promise<SessionUser | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getJwtSecretBytes());
     return {
       id: payload.id as string,
       name: payload.name as string,

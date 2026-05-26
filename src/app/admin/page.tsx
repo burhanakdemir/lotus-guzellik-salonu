@@ -2,8 +2,18 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminDashboardPanels } from "@/components/admin/AdminDashboardPanels";
 import { mapAdminAppointments } from "@/lib/admin-appointments-loader";
+import {
+  getAppointmentStaffFilter,
+  loadAdminAppointmentStatusCounts,
+  loadStaffStatusCountMap,
+} from "@/lib/admin-appointment-status";
 import { getSession, isAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  staffAdminProfileNameSelect,
+  staffAdminProfileNameSelectFull,
+} from "@/lib/staff-display-name";
+import { toStaffProfileTabs } from "@/lib/staff-profile-tabs";
 import { orderStaffProfilesForPanel } from "@/lib/staff-panel";
 import { todayString } from "@/lib/timezone";
 import { isMultiAdminEnabled, isSuperAdmin } from "@/lib/staff-admin";
@@ -18,25 +28,18 @@ export default async function AdminDashboard() {
   const multiAdmin = isMultiAdminEnabled();
 
   const staffProfiles = multiAdmin
-    ? orderStaffProfilesForPanel(
-        await prisma.staffAdminProfile.findMany({
-          where: { isActive: true },
-          orderBy: { sortOrder: "asc" },
-          select: {
-            id: true,
-            slug: true,
-            label: true,
-            color: true,
-            sortOrder: true,
-          },
-        })
+    ? toStaffProfileTabs(
+        orderStaffProfilesForPanel(
+          await prisma.staffAdminProfile.findMany({
+            where: { isActive: true },
+            orderBy: { sortOrder: "asc" },
+            select: staffAdminProfileNameSelectFull,
+          })
+        )
       )
     : [];
 
-  const staffFilter =
-    !superAdmin && session.staffProfileId
-      ? { assignedStaffId: session.staffProfileId }
-      : {};
+  const staffFilter = getAppointmentStaffFilter(session);
 
   const pendingWhere = {
     status: "PENDING" as "PENDING",
@@ -57,14 +60,15 @@ export default async function AdminDashboard() {
     pendingAppointments,
     services,
     daySchedule,
+    statusCounts,
+    staffStatusCountMap,
   ] = await Promise.all([
     prisma.appointment.findMany({
       where: todayWhere,
       include: {
         service: true,
-        assignedStaff: {
-          select: { id: true, slug: true, label: true, color: true },
-        },
+        user: { select: { name: true } },
+        assignedStaff: { select: staffAdminProfileNameSelect },
       },
       orderBy: { startTime: "asc" },
     }),
@@ -87,9 +91,8 @@ export default async function AdminDashboard() {
       where: pendingWhere,
       include: {
         service: true,
-        assignedStaff: {
-          select: { id: true, slug: true, label: true, color: true },
-        },
+        user: { select: { name: true } },
+        assignedStaff: { select: staffAdminProfileNameSelect },
       },
       orderBy: [{ date: "asc" }, { startTime: "asc" }],
       take: 100,
@@ -100,6 +103,8 @@ export default async function AdminDashboard() {
       select: { id: true, name: true, durationMinutes: true },
     }),
     getSalonDaySchedule(today),
+    loadAdminAppointmentStatusCounts(session),
+    superAdmin && multiAdmin ? loadStaffStatusCountMap() : Promise.resolve(null),
   ]);
 
   let initialActiveStaffId: string | null = null;
@@ -113,8 +118,8 @@ export default async function AdminDashboard() {
 
       <AdminDashboardPanels
         today={today}
-        initialPending={mapAdminAppointments(pendingAppointments)}
-        initialToday={mapAdminAppointments(todayAppointments)}
+        initialPending={await mapAdminAppointments(pendingAppointments)}
+        initialToday={await mapAdminAppointments(todayAppointments)}
         services={services}
         staffProfiles={staffProfiles}
         initialActiveStaffId={initialActiveStaffId}
@@ -124,6 +129,9 @@ export default async function AdminDashboard() {
         initialDaySchedule={daySchedule}
         memberCount={memberCount}
         weekAppointments={weekAppointments}
+        pendingTotalCount={statusCounts.pendingCount}
+        confirmedTotalCount={statusCounts.confirmedCount}
+        staffStatusCountMap={staffStatusCountMap}
       />
 
       {superAdmin && activePromo && (

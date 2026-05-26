@@ -6,7 +6,8 @@ export async function getAvailableSlots(
   date: string,
   serviceId: string,
   phone?: string,
-  assignedStaffId?: string
+  assignedStaffId?: string,
+  excludeAppointmentId?: string
 ): Promise<{ slots: string[]; error?: string }> {
   const service = await prisma.service.findFirst({
     where: { id: serviceId, isActive: true, deletedAt: null },
@@ -40,6 +41,7 @@ export async function getAvailableSlots(
       status: { in: ["PENDING", "CONFIRMED"] },
       ...(assignedStaffId ? { assignedStaffId } : {}),
     },
+    select: { id: true, startTime: true, endTime: true },
   });
 
   const slots: string[] = [];
@@ -49,6 +51,9 @@ export async function getAvailableSlots(
     const endTime = minutesToTime(end);
 
     const overlaps = appointments.some((apt) => {
+      if (excludeAppointmentId && apt.id === excludeAppointmentId) {
+        return false;
+      }
       const aptStart = timeToMinutes(apt.startTime);
       const aptEnd = timeToMinutes(apt.endTime);
       return start < aptEnd && end > aptStart;
@@ -65,12 +70,15 @@ export async function getAvailableSlots(
           date,
           phone: normalized,
           status: { in: ["PENDING", "CONFIRMED"] },
+          ...(excludeAppointmentId ? { id: { not: excludeAppointmentId } } : {}),
         },
       });
       if (userAppts.length > 0) {
         return {
           slots: [],
-          error: "Bu telefon numarasıyla aynı gün için zaten randevu var.",
+          // Telefon bazlı doğrulama sonucu saldırgan tarafından enum edilebilir.
+          // Bu yüzden hata mesajını genel tutuyoruz.
+          error: "Uygun saat yok.",
         };
       }
     }

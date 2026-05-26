@@ -7,6 +7,10 @@ import {
 import { rejectAppointment } from "@/lib/appointment-approval";
 import { requireAppointmentAccess } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  appointmentWithMemberInclude,
+  mapAdminAppointments,
+} from "@/lib/admin-appointments-loader";
 
 export async function POST(
   _req: Request,
@@ -21,12 +25,13 @@ export async function POST(
     }
     const apt = await prisma.appointment.findUnique({
       where: { id },
-      include: {
-        service: true,
-        assignedStaff: { select: { id: true, slug: true, label: true, color: true } },
-      },
+      include: appointmentWithMemberInclude,
     });
-    return NextResponse.json({ appointment: apt });
+    if (!apt) {
+      return NextResponse.json({ error: "Bulunamadı" }, { status: 404 });
+    }
+    const [mapped] = await mapAdminAppointments([apt]);
+    return NextResponse.json({ appointment: mapped });
   } catch (e) {
     if (e instanceof AdminUnauthorizedError) {
       return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });

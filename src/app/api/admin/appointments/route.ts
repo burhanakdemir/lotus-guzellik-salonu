@@ -6,39 +6,41 @@ import { ensureMemberAccount } from "@/lib/member-account";
 import { staffCanPerformService } from "@/lib/staff-services";
 import { isStaffAdmin, isSuperAdmin } from "@/lib/staff-admin";
 import { normalizePhone, timeToMinutes, minutesToTime } from "@/lib/utils";
+import {
+  appointmentWithMemberInclude,
+  mapAdminAppointments,
+} from "@/lib/admin-appointments-loader";
+import { getAppointmentStaffFilter } from "@/lib/admin-appointment-status";
+import { getAvailableSlots } from "@/lib/slots";
 import { z } from "zod";
-
-const appointmentInclude = {
-  service: true,
-  user: true,
-  assignedStaff: {
-    select: { id: true, slug: true, label: true, color: true, userId: true },
-  },
-} as const;
 
 export async function GET(req: Request) {
   try {
-    await requireAppointmentAccess();
+    const session = await requireAppointmentAccess();
     const { searchParams } = new URL(req.url);
     const date = searchParams.get("date");
     const from = searchParams.get("from");
     const to = searchParams.get("to");
+    const staffFilter = getAppointmentStaffFilter(session);
 
-    const where = date
+    if (!date && !(from && to)) {
+      return NextResponse.json(
+        { error: "date veya from+to parametreleri gerekli." },
+        { status: 400 }
+      );
+    }
+
+    const dateFilter = date
       ? { date }
-      : from && to
-        ? { date: { gte: from, lte: to } }
-        : from
-          ? { date: { gte: from } }
-          : to
-            ? { date: { lte: to } }
-            : {};
+      : { date: { gte: from!, lte: to! } };
+
     const appointments = await prisma.appointment.findMany({
-      where,
-      include: appointmentInclude,
+      where: { ...dateFilter, ...staffFilter },
+      include: appointmentWithMemberInclude,
       orderBy: [{ date: "asc" }, { startTime: "asc" }],
+      take: 1000,
     });
-    return NextResponse.json(appointments);
+    return NextResponse.json(await mapAdminAppointments(appointments));
   } catch (e) {
     if (e instanceof AdminUnauthorizedError) {
       return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
@@ -103,6 +105,19 @@ export async function POST(req: Request) {
       timeToMinutes(data.startTime) + service.durationMinutes
     );
 
+    const slotCheck = await getAvailableSlots(
+      data.date,
+      data.serviceId,
+      undefined,
+      assignedStaffId ?? undefined
+    );
+    if (!slotCheck.slots.includes(data.startTime)) {
+      return NextResponse.json(
+        { error: slotCheck.error || "Seçilen saat müsait değil." },
+        { status: 400 }
+      );
+    }
+
     const { userId: linkedUserId, created: memberCreated } =
       await ensureMemberAccount({
         name: data.name,
@@ -134,7 +149,7 @@ export async function POST(req: Request) {
             }
           : {}),
       },
-      include: appointmentInclude,
+      include: appointmentWithMemberInclude,
     });
 
     if (initialStatus === "PENDING") {
@@ -158,7 +173,8 @@ export async function POST(req: Request) {
       }).catch(() => {});
     }
 
-    return NextResponse.json({ appointment: apt, memberCreated });
+    const [mapped] = await mapAdminAppointments([apt]);
+    return NextResponse.json({ appointment: mapped, memberCreated });
   } catch (e) {
     if (e instanceof AdminUnauthorizedError) {
       return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });

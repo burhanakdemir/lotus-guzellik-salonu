@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
+  poweredByHeader: false,
   /** TOTP / QR — canlıda Internal Server Error önleme */
   serverExternalPackages: ["otplib", "qrcode"],
   images: {

@@ -11,6 +11,8 @@ import {
   type StaffProfileTab,
 } from "@/components/admin/StaffPersonelTabs";
 import type { CalendarView } from "@/lib/calendar-dates";
+import type { StaffStatusCounts } from "@/lib/admin-appointment-status";
+import { countsForStaffProfile } from "@/lib/admin-appointment-status";
 
 export interface AdminServiceOption {
   id: string;
@@ -29,9 +31,14 @@ export function AppointmentsAdmin({
   initialActiveStaffId = null,
   defaultView,
   pinnedDailyPanel = false,
+  pendingTotalCount,
+  confirmedTotalCount = 0,
+  staffStatusCountMap = null,
+  initialLoadedRange = null,
 }: {
   initialAppointments: CalendarAppointment[];
   initialCursor?: string;
+  initialLoadedRange?: { from: string; to: string } | null;
   services: AdminServiceOption[];
   isSuperAdmin?: boolean;
   currentStaffProfileId?: string | null;
@@ -40,6 +47,9 @@ export function AppointmentsAdmin({
   initialActiveStaffId?: string | null;
   defaultView?: CalendarView;
   pinnedDailyPanel?: boolean;
+  pendingTotalCount?: number;
+  confirmedTotalCount?: number;
+  staffStatusCountMap?: Record<string, StaffStatusCounts> | null;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -91,6 +101,23 @@ export function AppointmentsAdmin({
 
   const showAllTab = isSuperAdmin;
 
+  const scopedStatusCounts = useMemo(() => {
+    if (staffStatusCountMap) {
+      return countsForStaffProfile(staffStatusCountMap, activeStaffId);
+    }
+    return {
+      pending: pendingTotalCount ?? 0,
+      confirmed: confirmedTotalCount,
+    };
+  }, [
+    staffStatusCountMap,
+    activeStaffId,
+    pendingTotalCount,
+    confirmedTotalCount,
+  ]);
+
+  const statusListStaffSlug = activeProfile?.slug ?? null;
+
   return (
     <div className="space-y-2">
       {showStaffTabs && (
@@ -103,7 +130,7 @@ export function AppointmentsAdmin({
       )}
       {showStaffTabs && activeProfile && (
         <p className="text-[11px] text-gray-600">
-          <strong>{activeProfile.label}</strong> randevuları
+          <strong>{activeProfile.displayName}</strong> randevuları
           {!isSuperAdmin && activeStaffId !== currentStaffProfileId
             ? " (salt okunur)"
             : isSuperAdmin
@@ -121,6 +148,7 @@ export function AppointmentsAdmin({
       <AppointmentsCalendar
         initialAppointments={initialAppointments}
         initialCursor={initialCursor}
+        initialLoadedRange={initialLoadedRange}
         services={services}
         isSuperAdmin={isSuperAdmin}
         currentStaffProfileId={currentStaffProfileId}
@@ -130,6 +158,9 @@ export function AppointmentsAdmin({
         assignStaffIdForCreate={assignStaffIdForCreate}
         defaultView={defaultView}
         pinnedDailyPanel={pinnedDailyPanel || showStaffTabs}
+        pendingTotalCount={scopedStatusCounts.pending}
+        confirmedTotalCount={scopedStatusCounts.confirmed}
+        statusListStaffSlug={statusListStaffSlug}
       />
     </div>
   );

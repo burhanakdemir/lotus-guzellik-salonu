@@ -5,16 +5,26 @@ import {
   actorFromSession,
   assertCanEditAppointment,
 } from "@/lib/admin-permissions";
+import {
+  appointmentWithMemberInclude,
+  mapAdminAppointments,
+} from "@/lib/admin-appointments-loader";
 import { approveAppointment } from "@/lib/appointment-approval";
 import { requireAppointmentAccess } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { staffCanPerformService } from "@/lib/staff-services";
+import { getAvailableSlots } from "@/lib/slots";
 import { isSuperAdmin } from "@/lib/staff-admin";
+import { minutesToTime, timeToMinutes } from "@/lib/utils";
 import { z } from "zod";
 
 const schema = z.object({
   status: z.enum(["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"]).optional(),
   note: z.string().nullable().optional(),
   assignedStaffId: z.string().nullable().optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  serviceId: z.string().optional(),
 });
 
 export async function PATCH(
@@ -37,13 +47,14 @@ export async function PATCH(
       status?: typeof data.status;
       note?: string | null;
       assignedStaffId?: string | null;
+      date?: string;
+      startTime?: string;
+      endTime?: string;
+      serviceId?: string;
     } = {};
 
     if (data.status !== undefined) {
-      if (
-        data.status === "CONFIRMED" &&
-        existing.status === "PENDING"
-      ) {
+      if (data.status === "CONFIRMED" && existing.status === "PENDING") {
         const result = await approveAppointment(
           id,
           session.id,
@@ -79,15 +90,65 @@ export async function PATCH(
       updateData.assignedStaffId = data.assignedStaffId;
     }
 
+    const nextDate = data.date ?? existing.date;
+    const nextServiceId = data.serviceId ?? existing.serviceId;
+    const nextStartTime = data.startTime ?? existing.startTime;
+
+    if (
+      data.date !== undefined ||
+      data.startTime !== undefined ||
+      data.serviceId !== undefined
+    ) {
+      const service = await prisma.service.findFirst({
+        where: { id: nextServiceId, deletedAt: null },
+      });
+      if (!service) {
+        return NextResponse.json({ error: "Hizmet bulunamadı." }, { status: 404 });
+      }
+
+      const staffId = existing.assignedStaffId;
+      if (staffId) {
+        const canDo = await staffCanPerformService(staffId, nextServiceId);
+        if (!canDo) {
+          return NextResponse.json(
+            { error: "Bu usta seçilen hizmeti yapmamaktadır." },
+            { status: 400 }
+          );
+        }
+      }
+
+      const { slots, error: slotError } = await getAvailableSlots(
+        nextDate,
+        nextServiceId,
+        undefined,
+        staffId ?? undefined,
+        id
+      );
+      if (slotError) {
+        return NextResponse.json({ error: slotError }, { status: 400 });
+      }
+      if (!slots.includes(nextStartTime)) {
+        return NextResponse.json(
+          { error: "Seçilen saat müsait değil." },
+          { status: 400 }
+        );
+      }
+
+      updateData.date = nextDate;
+      updateData.startTime = nextStartTime;
+      updateData.endTime = minutesToTime(
+        timeToMinutes(nextStartTime) + service.durationMinutes
+      );
+      updateData.serviceId = nextServiceId;
+    }
+
     const apt = await prisma.appointment.update({
       where: { id },
       data: updateData,
-      include: {
-        service: true,
-        assignedStaff: { select: { id: true, slug: true, label: true, color: true } },
-      },
+      include: appointmentWithMemberInclude,
     });
-    return NextResponse.json(apt);
+    const [mapped] = await mapAdminAppointments([apt]);
+    return NextResponse.json(mapped);
   } catch (e) {
     if (e instanceof AdminUnauthorizedError) {
       return NextResponse.json({ error: "Oturum süresi dolmuş. Yeniden giriş yapın." }, { status: 401 });

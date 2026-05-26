@@ -4,6 +4,8 @@ export type StaffProfileTab = {
   id: string;
   slug: string;
   label: string;
+  /** Ad soyad (panelde görünen) */
+  displayName: string;
   color: string | null;
 };
 
@@ -88,7 +90,7 @@ export function StaffPersonelTabs({
               style={{ backgroundColor: p.color || "#d97b9a" }}
               aria-hidden
             />
-            {p.label}
+            {p.displayName}
             {pendingCountFor && pendingCountFor(p.id) > 0 && (
               <span className={isAdmin ? "admin-staff-tabs__count" : "ml-1 rounded-full bg-amber-500 px-1 text-[9px] text-white"}>
                 {pendingCountFor(p.id)}

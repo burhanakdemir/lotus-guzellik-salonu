@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import type { CalendarAppointment } from "@/components/admin/AppointmentsCalendar";
 import type { AdminServiceOption } from "@/components/admin/AppointmentsAdmin";
+import { getAppointmentMemberDisplayName } from "@/lib/admin-appointment-line";
 import { timeToMinutes } from "@/lib/time-format";
 
 export const statusChip: Record<string, string> = {
@@ -159,6 +160,7 @@ export function DailyScheduleGrid({
                   highlightStaffProfileId &&
                   starting.assignedStaffId === highlightStaffProfileId;
                 const readOnly = !canEdit(starting);
+                const label = getAppointmentMemberDisplayName(starting);
                 return (
                   <button
                     key={slotTime}
@@ -167,13 +169,13 @@ export function DailyScheduleGrid({
                     onClick={() => onSelect(starting)}
                     title={
                       readOnly
-                        ? `${starting.name} — salt okunur`
-                        : `${starting.name} — ${starting.service.name}`
+                        ? `${label} — salt okunur`
+                        : `${label} — ${starting.service.name}`
                     }
                   >
                     <span className="apt-calendar__slot-chip-time">{slotTime}</span>
                     <span className="apt-calendar__slot-chip-name truncate">
-                      {starting.name}
+                      {label}
                     </span>
                   </button>
                 );
@@ -221,7 +223,8 @@ export function DailyScheduleGrid({
                   className={`${statusDayEvent[a.status] ?? "apt-calendar__day-event"} w-full rounded px-2 py-1 text-left text-[11px]`}
                   onClick={() => onSelect(a)}
                 >
-                  {a.startTime}–{a.endTime} {a.name} · {a.service.name}
+                  {a.startTime}–{a.endTime}{" "}
+                  {getAppointmentMemberDisplayName(a)} · {a.service.name}
                 </button>
               </li>
             ))}

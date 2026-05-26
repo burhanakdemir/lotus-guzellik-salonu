@@ -70,7 +70,10 @@ export function assertCanEditAppointment(
 
 /** Yardımcı adminin erişebileceği admin path'leri */
 export function isStaffAdminPath(pathname: string): boolean {
-  return pathname === "/admin/randevular";
+  return (
+    pathname === "/admin/randevular" ||
+    pathname.startsWith("/admin/randevular/")
+  );
 }
 
 export function staffPersonelPath(slug: string): string {

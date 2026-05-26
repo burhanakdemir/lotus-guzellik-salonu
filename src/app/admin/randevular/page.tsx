@@ -5,8 +5,15 @@ import {
   loadAdminAppointmentsData,
   mapAdminAppointments,
 } from "@/lib/admin-appointments-loader";
+import {
+  countsForStaffProfile,
+  loadAdminAppointmentStatusCounts,
+  loadStaffStatusCountMap,
+} from "@/lib/admin-appointment-status";
 import { getSession, isAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { staffAdminProfileNameSelectFull } from "@/lib/staff-display-name";
+import { toStaffProfileTabs } from "@/lib/staff-profile-tabs";
 import { orderStaffProfilesForPanel } from "@/lib/staff-panel";
 import { isMultiAdminEnabled, isSuperAdmin } from "@/lib/staff-admin";
 
@@ -23,18 +30,14 @@ export default async function AdminRandevularPage({
   const superAdmin = isSuperAdmin(session.role);
 
   const staffProfiles = multiAdmin
-    ? orderStaffProfilesForPanel(
-        await prisma.staffAdminProfile.findMany({
-          where: { isActive: true },
-          orderBy: { sortOrder: "asc" },
-          select: {
-            id: true,
-            slug: true,
-            label: true,
-            color: true,
-            sortOrder: true,
-          },
-        })
+    ? toStaffProfileTabs(
+        orderStaffProfilesForPanel(
+          await prisma.staffAdminProfile.findMany({
+            where: { isActive: true },
+            orderBy: { sortOrder: "asc" },
+            select: staffAdminProfileNameSelectFull,
+          })
+        )
       )
     : [];
 
@@ -46,20 +49,36 @@ export default async function AdminRandevularPage({
     initialActiveStaffId = session.staffProfileId;
   }
 
-  const { today, appointments, services } = await loadAdminAppointmentsData();
+  const [{ today, monthRange, appointments, services }, staffStatusCountMap, scopedCounts] =
+    await Promise.all([
+      loadAdminAppointmentsData(session),
+      superAdmin && multiAdmin
+        ? loadStaffStatusCountMap()
+        : Promise.resolve(null),
+      loadAdminAppointmentStatusCounts(session, initialActiveStaffId),
+    ]);
+
+  const tabCounts =
+    staffStatusCountMap && initialActiveStaffId
+      ? countsForStaffProfile(staffStatusCountMap, initialActiveStaffId)
+      : {
+          pending: scopedCounts.pendingCount,
+          confirmed: scopedCounts.confirmedCount,
+        };
 
   return (
     <div>
       <h1>Randevular</h1>
       <p className="mb-2 text-[11px] text-gray-500">
         {multiAdmin
-          ? "Üstten usta seçin; takvim ve günlük saatler seçilen ustaya göre filtrelenir."
+          ? "Üstten usta seçin; onay bekleyen ve onaylı listeler seçilen ustaya göre güncellenir."
           : "Tüm randevular görüntülenir."}
       </p>
       <Suspense fallback={<p className="text-[11px] text-gray-500">Yükleniyor…</p>}>
         <AppointmentsAdmin
-          initialAppointments={mapAdminAppointments(appointments)}
+          initialAppointments={await mapAdminAppointments(appointments)}
           initialCursor={today}
+          initialLoadedRange={{ from: monthRange.from, to: monthRange.to }}
           services={services}
           isSuperAdmin={superAdmin}
           currentStaffProfileId={session.staffProfileId ?? null}
@@ -67,7 +86,10 @@ export default async function AdminRandevularPage({
           staffProfiles={staffProfiles}
           initialActiveStaffId={initialActiveStaffId}
           defaultView={multiAdmin ? "day" : undefined}
-          pinnedDailyPanel={multiAdmin}
+          pinnedDailyPanel={multiAdmin || !superAdmin}
+          pendingTotalCount={tabCounts.pending}
+          confirmedTotalCount={tabCounts.confirmed}
+          staffStatusCountMap={staffStatusCountMap}
         />
       </Suspense>
     </div>

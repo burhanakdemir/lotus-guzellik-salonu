@@ -20,6 +20,20 @@ export async function GET() {
     const services = await prisma.service.findMany({
       where: { deletedAt: null },
       orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        category: true,
+        description: true,
+        durationMinutes: true,
+        price: true,
+        imageUrl: true,
+        isActive: true,
+        isFeatured: true,
+        showPricePublic: true,
+        showPriceOnHomepage: true,
+      },
     });
     return NextResponse.json(services);
   } catch {

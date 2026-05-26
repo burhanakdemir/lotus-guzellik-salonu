@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { AdminServiceThumb } from "@/components/admin/AdminServiceThumb";
 import { groupServicesByCategory } from "@/lib/group-services-by-category";
 import {
@@ -38,7 +37,6 @@ export function ServicesAdmin({
   initialShowPrice?: boolean;
   initialShowDuration?: boolean;
 }) {
-  const router = useRouter();
   const [services, setServices] = useState(initialServices);
   const [showPrice, setShowPrice] = useState(initialShowPrice);
   const [showDuration, setShowDuration] = useState(initialShowDuration);
@@ -62,19 +60,47 @@ export function ServicesAdmin({
     [services]
   );
 
-  async function refresh() {
+  const reloadServices = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/services");
+      const res = await fetch("/api/admin/services", { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
-      if (Array.isArray(data)) {
-        setServices(data);
-        router.refresh();
-      }
+      if (Array.isArray(data)) setServices(data);
     } catch {
       /* ağ hatası */
     }
-  }
+  }, []);
+
+  /** Tek alan güncelle — tam liste yenileme yok (performans) */
+  const patchService = useCallback(
+    async (id: string, data: Partial<Service>, optimistic = true) => {
+      if (optimistic) {
+        setServices((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, ...data } : s))
+        );
+      }
+      try {
+        const res = await fetch(`/api/admin/services/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+          await reloadServices();
+          return false;
+        }
+        const updated = (await res.json()) as Service;
+        setServices((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
+        );
+        return true;
+      } catch {
+        await reloadServices();
+        return false;
+      }
+    },
+    [reloadServices]
+  );
 
   async function createService(e: React.FormEvent) {
     e.preventDefault();
@@ -94,22 +120,17 @@ export function ServicesAdmin({
       showPriceOnHomepage: false,
     });
     setShowAdd(false);
-    refresh();
-  }
-
-  async function updateService(id: string, data: Partial<Service>) {
-    await fetch(`/api/admin/services/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    refresh();
+    reloadServices();
   }
 
   async function deleteService(id: string) {
     if (!confirm("Silinsin mi?")) return;
-    await fetch(`/api/admin/services/${id}`, { method: "DELETE" });
-    refresh();
+    const res = await fetch(`/api/admin/services/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setServices((prev) => prev.filter((s) => s.id !== id));
+    } else {
+      await reloadServices();
+    }
   }
 
   function startEdit(service: Service, field: EditField) {
@@ -137,7 +158,7 @@ export function ServicesAdmin({
         cancelEdit();
         return;
       }
-      await updateService(service.id, { name });
+      await patchService(service.id, { name }, false);
     } else if (edit.field === "durationMinutes") {
       const durationMinutes = parseInt(draft, 10);
       if (!Number.isFinite(durationMinutes) || durationMinutes < 1) {
@@ -148,7 +169,7 @@ export function ServicesAdmin({
         cancelEdit();
         return;
       }
-      await updateService(service.id, { durationMinutes });
+      await patchService(service.id, { durationMinutes }, false);
     } else {
       const price = parseFloat(draft);
       if (!Number.isFinite(price) || price <= 0) {
@@ -159,7 +180,7 @@ export function ServicesAdmin({
         cancelEdit();
         return;
       }
-      await updateService(service.id, { price });
+      await patchService(service.id, { price }, false);
     }
     cancelEdit();
   }
@@ -168,19 +189,32 @@ export function ServicesAdmin({
     field: "showServicePrice" | "showServiceDuration",
     value: boolean
   ) {
+    const prevPrice = showPrice;
+    const prevDuration = showDuration;
+    const prevServices = services;
+
     setDisplaySaving(true);
     try {
-      if (field === "showServicePrice") setShowPrice(value);
-      else setShowDuration(value);
-      await updateServiceDisplaySettings(
-        field === "showServicePrice"
-          ? { showServicePrice: value }
-          : { showServiceDuration: value }
-      );
-      router.refresh();
+      if (field === "showServicePrice") {
+        setShowPrice(value);
+        if (!value) {
+          setServices((prev) =>
+            prev.map((s) => ({
+              ...s,
+              showPricePublic: false,
+              showPriceOnHomepage: false,
+            }))
+          );
+        }
+        await updateServiceDisplaySettings({ showServicePrice: value });
+      } else {
+        setShowDuration(value);
+        await updateServiceDisplaySettings({ showServiceDuration: value });
+      }
     } catch {
-      if (field === "showServicePrice") setShowPrice(!value);
-      else setShowDuration(!value);
+      if (field === "showServicePrice") setShowPrice(prevPrice);
+      else setShowDuration(prevDuration);
+      setServices(prevServices);
       alert("Kaydedilemedi.");
     } finally {
       setDisplaySaving(false);
@@ -206,17 +240,10 @@ export function ServicesAdmin({
         alert("Sunucu görsel adresi döndürmedi.");
         return;
       }
-      const patch = await fetch(`/api/admin/services/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: data.imageUrl }),
-      });
-      if (!patch.ok) {
-        const err = await patch.json().catch(() => ({}));
-        alert((err as { error?: string }).error || "Veritabanına kaydedilemedi.");
-        return;
+      const ok = await patchService(id, { imageUrl: data.imageUrl }, false);
+      if (!ok) {
+        alert("Veritabanına kaydedilemedi.");
       }
-      await refresh();
     } catch {
       alert("Yükleme sırasında bağlantı hatası.");
     }
@@ -477,7 +504,7 @@ export function ServicesAdmin({
                         checked={s.showPricePublic}
                         disabled={!showPrice}
                         onChange={(e) =>
-                          updateService(s.id, {
+                          void patchService(s.id, {
                             showPricePublic: e.target.checked,
                           })
                         }
@@ -497,7 +524,7 @@ export function ServicesAdmin({
                         checked={s.showPriceOnHomepage}
                         disabled={!showPrice || !s.isFeatured}
                         onChange={(e) =>
-                          updateService(s.id, {
+                          void patchService(s.id, {
                             showPriceOnHomepage: e.target.checked,
                           })
                         }
@@ -603,7 +630,9 @@ export function ServicesAdmin({
                           : "services-admin__btn services-admin__btn--featured"
                       }
                       onClick={() =>
-                        updateService(s.id, { isFeatured: !s.isFeatured })
+                        void patchService(s.id, {
+                          isFeatured: !s.isFeatured,
+                        })
                       }
                       title={
                         s.isFeatured

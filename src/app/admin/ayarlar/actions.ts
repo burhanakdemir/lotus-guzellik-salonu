@@ -127,6 +127,7 @@ export async function updateServiceDisplaySettings(input: {
   showServiceDuration?: boolean;
 }) {
   await requireAdmin();
+
   await prisma.salonSettings.update({
     where: { id: "default" },
     data: {
@@ -138,5 +139,14 @@ export async function updateServiceDisplaySettings(input: {
       }),
     },
   });
+
+  /** «Tümü — fiyat» kapatılınca tüm hizmet seçimlerini sıfırla */
+  if (input.showServicePrice === false) {
+    await prisma.service.updateMany({
+      where: { deletedAt: null },
+      data: { showPricePublic: false, showPriceOnHomepage: false },
+    });
+  }
+
   return { ok: true as const };
 }

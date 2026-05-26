@@ -1,3 +1,18 @@
+/* LOTUS — push bildirimleri + minimal PWA (offline zorunlu değil) */
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+  event.respondWith(fetch(event.request));
+});
+
 self.addEventListener("push", (event) => {
   let data = { title: "LOTUS", body: "Yeni bildiriminiz var.", url: "/hesabim#bildirimler" };
   try {
@@ -9,8 +24,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: "/logo-lotus.png",
-      badge: "/logo-lotus.png",
+      icon: "/logo/lotus-sade.png",
+      badge: "/logo/lotus-sade.png",
       data: { url: data.url },
     })
   );

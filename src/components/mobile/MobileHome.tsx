@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ServiceCard } from "@/components/ServiceCard";
+import { InstallAppButton } from "@/components/mobile/InstallAppButton";
 import { MobilePromoCarousel } from "@/components/mobile/MobilePromoCarousel";
 import type { WeeklyPromotion } from "@/components/WeeklyPromotions";
 
@@ -62,6 +63,7 @@ export function MobileHome({
             {" · "}
             Antalya Kepez
           </p>
+          <InstallAppButton />
         </div>
       </section>
 

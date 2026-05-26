@@ -13,8 +13,16 @@ export function formatPhoneDisplay(phone: string): string {
   return phone;
 }
 
-export function whatsappUrl(phone: string): string {
+/** WhatsApp wa.me için uluslararası rakamlar (ör. 905323943686) */
+export function whatsappIntlDigits(phone: string): string | null {
   const d = normalizePhone(phone);
-  const intl = d.length === 10 ? `90${d}` : d;
-  return `https://wa.me/${intl}`;
+  if (d.length === 10) return `90${d}`;
+  if (d.length === 12 && d.startsWith("90")) return d;
+  return null;
+}
+
+/** Masaüstünde WhatsApp Web, mobilde uygulama açılır */
+export function whatsappUrl(phone: string): string | null {
+  const intl = whatsappIntlDigits(phone);
+  return intl ? `https://wa.me/${intl}` : null;
 }

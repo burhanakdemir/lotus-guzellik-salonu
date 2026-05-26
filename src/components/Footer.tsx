@@ -1,4 +1,5 @@
 import { LotusLogo } from "@/components/LotusLogo";
+import { WhatsAppPhoneLink } from "@/components/WhatsAppPhoneLink";
 import { getSalonSettingsSafe } from "@/lib/db-safe";
 
 export async function Footer() {
@@ -15,12 +16,12 @@ export async function Footer() {
           <div>
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
               <p className="font-display text-lg leading-none text-white">LOTUS</p>
-              <a
-                href={`tel:${settings?.phone?.replace(/\s/g, "")}`}
-                className="font-display text-xl leading-none text-lotus-center transition hover:text-white md:text-2xl"
-              >
-                {settings?.phone}
-              </a>
+              {settings?.phone && (
+                <WhatsAppPhoneLink
+                  phone={settings.phone}
+                  className="font-display text-xl leading-none text-lotus-center transition hover:text-white md:text-2xl"
+                />
+              )}
             </div>
             <p className="text-[10px] tracking-[0.2em] text-lotus-center">ANTALYA</p>
             <p className="mt-1 max-w-xs text-[11px] leading-snug text-lotus-200/90">

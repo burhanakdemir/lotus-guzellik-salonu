@@ -47,7 +47,7 @@ export async function SalonContactStrip({
               <p className="font-display text-lg leading-none text-white">LOTUS</p>
               {settings.phone && (
                 <a
-                  href={whatsappUrl(settings.phone)}
+                  href={whatsappUrl(settings.phone) ?? "#"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 font-display text-xl leading-none text-lotus-center transition hover:text-white md:text-2xl"

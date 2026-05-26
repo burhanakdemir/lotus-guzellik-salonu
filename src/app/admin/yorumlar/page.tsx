@@ -10,15 +10,13 @@ import { toStaffProfileTabs } from "@/lib/staff-profile-tabs";
 import { orderStaffProfilesForPanel } from "@/lib/staff-panel";
 import { isMultiAdminEnabled, isSuperAdmin } from "@/lib/staff-admin";
 
-export default async function AdminYorumlarPage({
-  searchParams,
-}: {
+export default async function AdminYorumlarPage(props: {
   searchParams: Promise<{ personel?: string }>;
 }) {
   const session = await getSession();
   if (!session || !isAdminSession(session)) redirect("/admin/giris");
 
-  const { personel } = await searchParams;
+  const { personel } = await props.searchParams;
   const superAdmin = isSuperAdmin(session.role);
   const multiAdmin = isMultiAdminEnabled();
 

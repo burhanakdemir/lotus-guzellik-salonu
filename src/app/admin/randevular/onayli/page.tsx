@@ -10,15 +10,13 @@ import {
 import { getSession, isAdminSession } from "@/lib/auth";
 import { isMultiAdminEnabled, isSuperAdmin } from "@/lib/staff-admin";
 
-export default async function OnayliRandevularPage({
-  searchParams,
-}: {
+export default async function OnayliRandevularPage(props: {
   searchParams: Promise<{ personel?: string }>;
 }) {
   const session = await getSession();
   if (!session || !isAdminSession(session)) redirect("/admin/giris");
 
-  const { personel } = await searchParams;
+  const { personel } = await props.searchParams;
   const scope = await resolveStaffScopeBySlug(session, personel);
   const [{ confirmedCount }, confirmedRows] = await Promise.all([
     loadAdminAppointmentStatusCounts(session, scope.staffProfileId),

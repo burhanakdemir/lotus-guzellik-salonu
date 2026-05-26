@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
+import { WhatsAppPhoneLink } from "@/components/WhatsAppPhoneLink";
 import { getSalonSettingsSafe } from "@/lib/db-safe";
 
 export default async function HakkimizdaPage() {
@@ -49,12 +50,13 @@ export default async function HakkimizdaPage() {
             <h2 className="text-xs font-bold uppercase tracking-widest text-gold-dark">
               Telefon
             </h2>
-            <a
-              href={`tel:${settings?.phone?.replace(/\s/g, "")}`}
-              className="mt-4 block font-display text-3xl text-rose-800 transition hover:text-rose-600"
-            >
-              {settings?.phone}
-            </a>
+            {settings?.phone && (
+              <WhatsAppPhoneLink
+                phone={settings.phone}
+                className="mt-4 font-display text-3xl text-rose-800 transition hover:text-rose-600"
+                iconClassName="h-8 w-8 shrink-0 text-[#25D366]"
+              />
+            )}
             <Link href="/randevu" className="btn-primary mt-6 inline-flex">
               Randevu Al
             </Link>

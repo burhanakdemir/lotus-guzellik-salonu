@@ -1,22 +1,21 @@
 import Link from "next/link";
+import { WhatsAppPhoneLink } from "@/components/WhatsAppPhoneLink";
 import { getSalonSettingsSafe } from "@/lib/db-safe";
 
 export async function MobileFooter() {
   const settings = await getSalonSettingsSafe();
-  const phone = settings?.phone?.replace(/\s/g, "") ?? "";
 
   return (
     <footer className="site-mobile-only mobile-footer border-t border-lotus-200/60 bg-lotus-800 text-lotus-100">
       <div className="mx-auto max-w-lg px-4 py-6">
         <div className="text-center">
           <p className="font-display text-xl text-white">LOTUS</p>
-          {phone && (
-            <a
-              href={`tel:${phone}`}
-              className="mt-2 inline-block text-lg font-semibold text-lotus-center"
-            >
-              {settings?.phone}
-            </a>
+          {settings?.phone && (
+            <WhatsAppPhoneLink
+              phone={settings.phone}
+              className="mt-2 justify-center text-lg font-semibold text-lotus-center transition hover:text-white"
+              iconClassName="h-5 w-5 shrink-0 text-[#25D366]"
+            />
           )}
           <p className="mt-2 text-xs leading-relaxed text-lotus-200/90">
             {settings?.address}

@@ -6,12 +6,10 @@ import { orderStaffProfilesForPanel } from "@/lib/staff-panel";
 import { isMultiAdminEnabled } from "@/lib/staff-admin";
 import { RandevuForm } from "@/components/RandevuForm";
 
-export default async function RandevuPage({
-  searchParams,
-}: {
+export default async function RandevuPage(props: {
   searchParams: Promise<{ hizmet?: string }>;
 }) {
-  const params = await searchParams;
+  const { hizmet: initialHizmetSlug } = await props.searchParams;
   const session = await getSession();
   const display = await getSalonDisplaySettings();
   const multiAdmin = isMultiAdminEnabled();
@@ -74,7 +72,7 @@ export default async function RandevuPage({
             staffOptions={staffOptions}
             staffServiceMap={staffServiceMap}
             user={session ? { name: session.name, phone: session.phone } : null}
-            initialSlug={params.hizmet}
+            initialSlug={initialHizmetSlug}
             showPrice={display.showPrice}
             showDuration={display.showDuration}
           />

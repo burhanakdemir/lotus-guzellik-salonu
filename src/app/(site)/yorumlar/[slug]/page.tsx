@@ -6,12 +6,10 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { findActiveStaffBySlug } from "@/lib/staff-content-scope";
 
-export async function generateMetadata({
-  params,
-}: {
+export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const { slug } = await props.params;
   const staff = await findActiveStaffBySlug(slug);
   if (!staff) return { title: "Yorumlar | LOTUS" };
   return {
@@ -20,12 +18,10 @@ export async function generateMetadata({
   };
 }
 
-export default async function StaffYorumlarPage({
-  params,
-}: {
+export default async function StaffYorumlarPage(props: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const { slug } = await props.params;
   const staff = await findActiveStaffBySlug(slug);
   if (!staff) notFound();
 

@@ -17,15 +17,13 @@ import { toStaffProfileTabs } from "@/lib/staff-profile-tabs";
 import { orderStaffProfilesForPanel } from "@/lib/staff-panel";
 import { isMultiAdminEnabled, isSuperAdmin } from "@/lib/staff-admin";
 
-export default async function AdminRandevularPage({
-  searchParams,
-}: {
+export default async function AdminRandevularPage(props: {
   searchParams: Promise<{ personel?: string }>;
 }) {
   const session = await getSession();
   if (!session || !isAdminSession(session)) redirect("/admin/giris");
 
-  const { personel: personelSlug } = await searchParams;
+  const { personel: personelSlug } = await props.searchParams;
   const multiAdmin = isMultiAdminEnabled();
   const superAdmin = isSuperAdmin(session.role);
 

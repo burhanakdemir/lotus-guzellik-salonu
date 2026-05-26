@@ -53,10 +53,7 @@ export function MobileHome({
         <div className="mobile-hero__content">
           <h1 className="mobile-hero__title">{heroTitle}</h1>
           {heroSubtitle && <p className="mobile-hero__subtitle">{heroSubtitle}</p>}
-          <Link href="/randevu" className="btn-gold mt-5 inline-flex w-full justify-center">
-            Randevu Al
-          </Link>
-          <p className="mt-3 text-center text-xs text-lotus-100/90">
+          <p className="mt-5 text-center text-xs text-lotus-100/90">
             <Link href="/hakkimizda" className="underline underline-offset-2">
               Neden LOTUS?
             </Link>

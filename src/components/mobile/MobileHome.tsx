@@ -4,6 +4,7 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { InstallAppButton } from "@/components/mobile/InstallAppButton";
 import { MobilePromoCarousel } from "@/components/mobile/MobilePromoCarousel";
 import type { WeeklyPromotion } from "@/components/WeeklyPromotions";
+import { shouldShowServicePrice } from "@/lib/service-price-display";
 
 type FeaturedService = {
   id: string;
@@ -14,6 +15,8 @@ type FeaturedService = {
   durationMinutes: number;
   price: number;
   imageUrl: string | null;
+  showPricePublic?: boolean;
+  showPriceOnHomepage?: boolean;
 };
 
 type Props = {
@@ -77,7 +80,7 @@ export function MobileHome({
                 key={s.id}
                 {...s}
                 compact
-                showPrice={showPrice}
+                showPrice={shouldShowServicePrice(showPrice, s, "home")}
                 showDuration={showDuration}
               />
             ))}

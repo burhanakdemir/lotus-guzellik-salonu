@@ -27,6 +27,7 @@ export default async function RandevuPage({
         category: true,
         durationMinutes: true,
         price: true,
+        showPricePublic: true,
       },
   });
 

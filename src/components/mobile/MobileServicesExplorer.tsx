@@ -7,6 +7,7 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { groupServicesByCategory } from "@/lib/group-services-by-category";
 import { getServiceCategoryLabel } from "@/lib/service-categories";
+import { shouldShowServicePrice } from "@/lib/service-price-display";
 
 type Service = {
   id: string;
@@ -17,6 +18,8 @@ type Service = {
   durationMinutes: number;
   price: number;
   imageUrl?: string | null;
+  showPricePublic?: boolean;
+  showPriceOnHomepage?: boolean;
 };
 
 type Props = {
@@ -136,7 +139,7 @@ export function MobileServicesExplorer({
           <ServiceCard
             key={s.id}
             {...s}
-            showPrice={showPrice}
+            showPrice={shouldShowServicePrice(showPrice, s, "public")}
             showDuration={showDuration}
           />
         ))}

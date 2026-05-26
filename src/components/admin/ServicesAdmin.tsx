@@ -23,6 +23,8 @@ interface Service {
   imageUrl: string | null;
   isActive: boolean;
   isFeatured: boolean;
+  showPricePublic: boolean;
+  showPriceOnHomepage: boolean;
 }
 
 type EditField = "name" | "durationMinutes" | "price";
@@ -51,6 +53,8 @@ export function ServicesAdmin({
     durationMinutes: 30,
     price: 100,
     isFeatured: false,
+    showPricePublic: true,
+    showPriceOnHomepage: false,
   });
 
   const { grouped, sortedCategories } = useMemo(
@@ -86,6 +90,8 @@ export function ServicesAdmin({
       durationMinutes: 30,
       price: 100,
       isFeatured: false,
+      showPricePublic: true,
+      showPriceOnHomepage: false,
     });
     setShowAdd(false);
     refresh();
@@ -283,7 +289,7 @@ export function ServicesAdmin({
                       toggleDisplay("showServiceDuration", e.target.checked)
                     }
                   />
-                  <span>Sitede göster</span>
+                  <span>Tümü — süre</span>
                 </label>
               </th>
               <th className="services-admin__th services-admin__th--num">
@@ -296,8 +302,13 @@ export function ServicesAdmin({
                       toggleDisplay("showServicePrice", e.target.checked)
                     }
                   />
-                  <span>Sitede göster</span>
+                  <span>Tümü — fiyat</span>
                 </label>
+              </th>
+              <th className="services-admin__th services-admin__th--num">
+                <span className="text-[10px] font-normal normal-case text-gray-500">
+                  Hizmet bazlı
+                </span>
               </th>
               <th />
             </tr>
@@ -306,6 +317,7 @@ export function ServicesAdmin({
               <th className="services-admin__th">Hizmet</th>
               <th className="services-admin__th services-admin__th--num">Süre</th>
               <th className="services-admin__th services-admin__th--num">Fiyat</th>
+              <th className="services-admin__th services-admin__th--num">Fiyat göster</th>
               <th className="services-admin__th services-admin__th--actions">İşlemler</th>
             </tr>
           </thead>
@@ -314,7 +326,7 @@ export function ServicesAdmin({
               <Fragment key={cat}>
                 <tr className="services-admin__category-row bg-lotus-50">
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-lotus-800"
                   >
                     {getServiceCategoryLabel(cat)}
@@ -456,6 +468,43 @@ export function ServicesAdmin({
                   ) : (
                     <span className="services-admin__price">{formatPrice(s.price)}</span>
                   )}
+                </td>
+                <td className="services-admin__td services-admin__td--num">
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="services-admin__display-toggle !justify-start">
+                      <input
+                        type="checkbox"
+                        checked={s.showPricePublic}
+                        disabled={!showPrice}
+                        onChange={(e) =>
+                          updateService(s.id, {
+                            showPricePublic: e.target.checked,
+                          })
+                        }
+                      />
+                      <span>Site</span>
+                    </label>
+                    <label
+                      className="services-admin__display-toggle !justify-start"
+                      title={
+                        s.isFeatured
+                          ? "Ana sayfa öne çıkan kartında"
+                          : "Önce «Öne çıkar» ile ana sayfaya ekleyin"
+                      }
+                    >
+                      <input
+                        type="checkbox"
+                        checked={s.showPriceOnHomepage}
+                        disabled={!showPrice || !s.isFeatured}
+                        onChange={(e) =>
+                          updateService(s.id, {
+                            showPriceOnHomepage: e.target.checked,
+                          })
+                        }
+                      />
+                      <span>Ana sayfa</span>
+                    </label>
+                  </div>
                 </td>
                 <td className="services-admin__td services-admin__td--actions">
                   <div className="services-admin__actions">

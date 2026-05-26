@@ -70,6 +70,16 @@ async function main() {
   try {
     await ensureAdminUser(prisma);
 
+    const featuredMigrated = await prisma.service.updateMany({
+      where: { isFeatured: true, deletedAt: null, showPriceOnHomepage: false },
+      data: { showPriceOnHomepage: true },
+    });
+    if (featuredMigrated.count > 0) {
+      console.log(
+        `→ ${featuredMigrated.count} öne çıkan hizmet: ana sayfa fiyat gösterimi açıldı (geriye uyum).`
+      );
+    }
+
     const activeCount = await prisma.service.count({
       where: { deletedAt: null, isActive: true },
     });

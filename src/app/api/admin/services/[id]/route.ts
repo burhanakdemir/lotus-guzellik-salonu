@@ -12,6 +12,8 @@ const updateSchema = z.object({
   isFeatured: z.boolean().optional(),
   isActive: z.boolean().optional(),
   imageUrl: z.string().nullable().optional(),
+  showPricePublic: z.boolean().optional(),
+  showPriceOnHomepage: z.boolean().optional(),
 });
 
 export async function PATCH(

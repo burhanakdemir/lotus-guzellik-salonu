@@ -10,6 +10,7 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { MobileServicesExplorer } from "@/components/mobile/MobileServicesExplorer";
 import { getServiceCategoryLabel } from "@/lib/service-categories";
 import { getSalonDisplaySettings } from "@/lib/salon-display";
+import { shouldShowServicePrice } from "@/lib/service-price-display";
 
 export default async function HizmetlerPage() {
   const display = await getSalonDisplaySettings();
@@ -110,7 +111,11 @@ export default async function HizmetlerPage() {
                     <ServiceCard
                       key={s.id}
                       {...s}
-                      showPrice={display.showPrice}
+                      showPrice={shouldShowServicePrice(
+                        display.showPrice,
+                        s,
+                        "public"
+                      )}
                       showDuration={display.showDuration}
                     />
                   ))}

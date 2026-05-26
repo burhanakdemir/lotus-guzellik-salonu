@@ -125,6 +125,10 @@ model Service {
   description     String
   durationMinutes Int
   price           Float
+  /// Hizmetler / randevu vb. (genel site ayarı açıkken)
+  showPricePublic      Boolean       @default(true)
+  /// Ana sayfa öne çıkan kartlarda
+  showPriceOnHomepage  Boolean       @default(false)
   imageUrl        String?
   isActive        Boolean       @default(true)
   isFeatured      Boolean       @default(false)

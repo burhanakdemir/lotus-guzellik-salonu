@@ -16,8 +16,9 @@ export default async function AdminHizmetlerPage() {
     <div>
       <h1>Hizmetler</h1>
       <p className="mb-3 text-sm text-gray-500">
-        Süre ve fiyat sütunlarının üstündeki kutucuklar müşteri sitesinde gösterimi
-        açar/kapatır.
+        Üstteki «Tümü» kutucukları tüm sitede süre/fiyatı açar veya kapatır. Her
+        hizmet satırında «Site» ve «Ana sayfa» ile tek tek seçebilirsiniz; ana sayfa
+        yalnızca öne çıkan hizmetlerde geçerlidir.
       </p>
       <ServicesAdmin
         initialServices={services}

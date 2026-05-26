@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSalonSettingsSafe, safeDbQuery } from "@/lib/db-safe";
 import { getSalonDisplaySettings } from "@/lib/salon-display";
+import { shouldShowServicePrice } from "@/lib/service-price-display";
 import { ServiceCard } from "@/components/ServiceCard";
 import { HeroShowcaseGrid } from "@/components/HeroShowcaseGrid";
 import { WeeklyPromotions } from "@/components/WeeklyPromotions";
@@ -132,7 +133,7 @@ export default async function HomePage() {
                   key={s.id}
                   {...s}
                   compact
-                  showPrice={display.showPrice}
+                  showPrice={shouldShowServicePrice(display.showPrice, s, "home")}
                   showDuration={display.showDuration}
                 />
               ))}

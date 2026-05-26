@@ -14,6 +14,8 @@ export function catalogServicesFallback() {
     imageUrl: null as string | null,
     isActive: true,
     isFeatured: s.featured ?? false,
+    showPricePublic: true,
+    showPriceOnHomepage: s.featured ?? false,
     deletedAt: null as Date | null,
     createdAt: new Date(0),
     updatedAt: new Date(0),

@@ -14,6 +14,7 @@ interface Service {
   category: string;
   durationMinutes: number;
   price: number;
+  showPricePublic?: boolean;
 }
 
 export interface BookingStaffOption {
@@ -489,11 +490,13 @@ export function RandevuForm({
                       >
                         <div
                           className={
-                            showPrice ? "flex justify-between gap-2" : ""
+                            showPrice && s.showPricePublic !== false
+                              ? "flex justify-between gap-2"
+                              : ""
                           }
                         >
                           <span className="font-medium">{s.name}</span>
-                          {showPrice && (
+                          {showPrice && s.showPricePublic !== false && (
                             <span className="shrink-0 text-rose-700">
                               {formatPrice(s.price)}
                             </span>

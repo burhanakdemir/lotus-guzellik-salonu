@@ -100,9 +100,14 @@ function ReviewImageCarousel({
 export function CustomerReviews({
   initialReviews,
   member,
+  staffSlug = null,
+  staffLabel = null,
 }: {
   initialReviews: ReviewItem[];
   member: MemberInfo;
+  /** Usta sayfasında yorum bu ustaya bağlanır */
+  staffSlug?: string | null;
+  staffLabel?: string | null;
 }) {
   const router = useRouter();
   const [reviews, setReviews] = useState(initialReviews);
@@ -173,6 +178,7 @@ export function CustomerReviews({
     if (images.length > 0) {
       images.forEach((file, index) => fd.append(`image_${index}`, file));
     }
+    if (staffSlug) fd.append("staffSlug", staffSlug);
 
     try {
       const res = await fetch("/api/reviews", { method: "POST", body: fd });
@@ -198,7 +204,8 @@ export function CustomerReviews({
   }
 
   async function refreshReviews() {
-    const res = await fetch("/api/reviews");
+    const q = staffSlug ? `?staffSlug=${encodeURIComponent(staffSlug)}` : "";
+    const res = await fetch(`/api/reviews${q}`);
     if (res.ok) setReviews(await res.json());
   }
 
@@ -211,12 +218,15 @@ export function CustomerReviews({
           </summary>
           <div className="card max-md:!rounded-none max-md:!border-0 max-md:!shadow-none max-md:ring-0 md:sticky md:top-24 md:!p-5">
           <h2 className="hidden font-display text-xl text-lotus-900 md:block md:text-2xl">
-            Yorum Yazın
+            {staffLabel ? `${staffLabel} — Yorum Yazın` : "Yorum Yazın"}
           </h2>
           <p className="mt-1 text-xs leading-snug text-gray-500 md:text-sm">
             {member.isMember
               ? `${member.name}, deneyiminizi paylaşın. Yorumunuz onaylandıktan sonra yayınlanır.`
               : "Üye olmadan da yorum bırakabilirsiniz. Telefon ve e-posta bilgileriniz yalnızca doğrulama için kullanılır."}
+            {staffLabel && (
+              <> Bu yorum <strong>{staffLabel}</strong> için kaydedilir.</>
+            )}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-4 space-y-3">

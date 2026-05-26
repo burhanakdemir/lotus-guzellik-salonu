@@ -1,30 +1,69 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import {
+  AdminForbiddenError,
+  AdminUnauthorizedError,
+} from "@/lib/admin-permissions";
+import {
+  actorFromSession,
+  assertCanManageStaffContent,
+  resolveStaffContentScope,
+} from "@/lib/staff-content-scope";
+import { requireStaffContentAccess } from "@/lib/auth";
 import {
   GALLERY_MAX_BYTES,
   mediaTypeFromFilename,
   mediaTypeFromMime,
 } from "@/lib/gallery";
 import { prisma } from "@/lib/prisma";
+import { isSuperAdmin } from "@/lib/staff-admin";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    await requireAdmin();
+    const session = await requireStaffContentAccess();
+    const personel = new URL(req.url).searchParams.get("personel");
+    const scope = await resolveStaffContentScope(session, personel);
+
     const items = await prisma.galleryItem.findMany({
+      where: scope.staffFilter,
       orderBy: [{ sortOrder: "desc" }, { createdAt: "desc" }],
     });
     return NextResponse.json(items);
-  } catch {
+  } catch (e) {
+    if (e instanceof AdminUnauthorizedError) {
+      return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
   }
 }
 
+async function resolveUploadStaffProfileId(
+  session: Awaited<ReturnType<typeof requireStaffContentAccess>>,
+  personelSlug: string | null
+): Promise<string | null> {
+  if (!isSuperAdmin(session.role)) {
+    return session.staffProfileId ?? null;
+  }
+  if (!personelSlug?.trim()) return null;
+  const scope = await resolveStaffContentScope(session, personelSlug);
+  return scope.staffProfileId;
+}
+
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    const session = await requireStaffContentAccess();
     const formData = await req.formData();
+    const personel = String(formData.get("personel") ?? "").trim() || null;
+    const staffProfileId = await resolveUploadStaffProfileId(session, personel);
+
+    if (isSuperAdmin(session.role) && !staffProfileId) {
+      return NextResponse.json(
+        { error: "Yükleme için bir usta seçin." },
+        { status: 400 }
+      );
+    }
+
     const file = formData.get("file") as File | null;
     const title = String(formData.get("title") ?? "").trim();
     const description = String(formData.get("description") ?? "").trim();
@@ -58,6 +97,7 @@ export async function POST(req: Request) {
     }
 
     const maxOrder = await prisma.galleryItem.aggregate({
+      where: staffProfileId ? { staffProfileId } : {},
       _max: { sortOrder: true },
     });
     const sortOrder = (maxOrder._max.sortOrder ?? 0) + 1;
@@ -70,6 +110,7 @@ export async function POST(req: Request) {
         mediaUrl: "/uploads/gallery/pending",
         sortOrder,
         isActive: true,
+        staffProfileId,
       },
     });
 
@@ -89,8 +130,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json(updated);
   } catch (e) {
-    if (e instanceof Error && e.message === "UNAUTHORIZED") {
+    if (e instanceof AdminUnauthorizedError) {
       return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+    }
+    if (e instanceof AdminForbiddenError) {
+      return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
     }
     return NextResponse.json({ error: "Yüklenemedi." }, { status: 500 });
   }

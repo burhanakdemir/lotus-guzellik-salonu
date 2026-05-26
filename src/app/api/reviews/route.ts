@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { findActiveStaffBySlug } from "@/lib/staff-content-scope";
 import { prisma } from "@/lib/prisma";
 import {
   GUEST_MAX_REVIEW_IMAGES,
@@ -25,9 +26,20 @@ const memberSchema = z.object({
   content: z.string().min(10, "Yorum en az 10 karakter olmalı.").max(2000),
 });
 
-export async function GET() {
+export async function GET(req: Request) {
+  const staffSlug = new URL(req.url).searchParams.get("staffSlug");
+  let staffProfileId: string | null | undefined = undefined;
+  if (staffSlug) {
+    const staff = await findActiveStaffBySlug(staffSlug);
+    if (!staff) return NextResponse.json([]);
+    staffProfileId = staff.id;
+  }
+
   const reviews = await prisma.customerReview.findMany({
-    where: { status: "APPROVED" },
+    where: {
+      status: "APPROVED",
+      ...(staffProfileId !== undefined ? { staffProfileId } : {}),
+    },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -50,12 +62,22 @@ export async function GET() {
   );
 }
 
+async function resolveReviewStaffId(
+  staffSlug: string | null
+): Promise<string | null> {
+  if (!staffSlug?.trim()) return null;
+  const staff = await findActiveStaffBySlug(staffSlug.trim());
+  return staff?.id ?? null;
+}
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const content = String(formData.get("content") ?? "").trim();
     const imageFiles = parseReviewImageFiles(formData);
     const session = await getSession();
+    const staffSlug = String(formData.get("staffSlug") ?? "").trim() || null;
+    const staffProfileId = await resolveReviewStaffId(staffSlug);
 
     if (session?.role === "MEMBER") {
       const imageError = validateReviewImageFiles(imageFiles, MEMBER_MAX_REVIEW_IMAGES);
@@ -75,6 +97,7 @@ export async function POST(req: Request) {
         data: {
           content: data.content.trim(),
           userId: member.id,
+          staffProfileId,
           status: "PENDING",
         },
       });
@@ -112,6 +135,7 @@ export async function POST(req: Request) {
         guestName: data.guestName.trim(),
         guestPhone: data.guestPhone,
         guestEmail: data.guestEmail.trim().toLowerCase(),
+        staffProfileId,
         status: "PENDING",
       },
     });

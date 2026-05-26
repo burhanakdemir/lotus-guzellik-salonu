@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import {
+  AdminForbiddenError,
+  AdminUnauthorizedError,
+} from "@/lib/admin-permissions";
+import {
+  actorFromSession,
+  assertCanManageStaffContent,
+} from "@/lib/staff-content-scope";
+import { requireStaffContentAccess } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   deleteReviewImages,
@@ -54,12 +62,13 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const session = await requireStaffContentAccess();
     const { id } = await params;
     const existing = await prisma.customerReview.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Bulunamadı" }, { status: 404 });
     }
+    assertCanManageStaffContent(actorFromSession(session), existing);
 
     const contentType = req.headers.get("content-type") ?? "";
 
@@ -128,6 +137,12 @@ export async function PATCH(
     });
     return NextResponse.json(updated);
   } catch (e) {
+    if (e instanceof AdminUnauthorizedError) {
+      return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+    }
+    if (e instanceof AdminForbiddenError) {
+      return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
+    }
     if (e instanceof z.ZodError) {
       return NextResponse.json({ error: "Geçersiz veri." }, { status: 400 });
     }
@@ -140,16 +155,23 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const session = await requireStaffContentAccess();
     const { id } = await params;
     const existing = await prisma.customerReview.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Bulunamadı" }, { status: 404 });
     }
+    assertCanManageStaffContent(actorFromSession(session), existing);
     await deleteReviewImages(existing.imageUrls);
     await prisma.customerReview.delete({ where: { id } });
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (e) {
+    if (e instanceof AdminUnauthorizedError) {
+      return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+    }
+    if (e instanceof AdminForbiddenError) {
+      return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
+    }
     return NextResponse.json({ error: "Silinemedi." }, { status: 400 });
   }
 }

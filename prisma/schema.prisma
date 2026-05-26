@@ -100,6 +100,8 @@ model StaffAdminProfile {
   appointments      Appointment[]
   services          StaffService[]
   staffNotifications StaffNotification[]
+  galleryItems      GalleryItem[]
+  reviews           CustomerReview[]
 
   @@index([isActive, sortOrder])
 }
@@ -263,33 +265,39 @@ model SiteContent {
 }
 
 model GalleryItem {
-  id          String           @id @default(cuid())
-  title       String
-  description String           @default("")
-  mediaType   GalleryMediaType
-  mediaUrl    String
-  sortOrder   Int              @default(0)
-  isActive    Boolean          @default(true)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id              String             @id @default(cuid())
+  title           String
+  description     String             @default("")
+  mediaType       GalleryMediaType
+  mediaUrl        String
+  sortOrder       Int                @default(0)
+  isActive        Boolean            @default(true)
+  staffProfileId  String?
+  staffProfile    StaffAdminProfile? @relation(fields: [staffProfileId], references: [id], onDelete: SetNull)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 
   @@index([isActive, sortOrder])
+  @@index([staffProfileId, isActive, sortOrder])
 }
 
 model CustomerReview {
-  id         String       @id @default(cuid())
-  content    String
-  imageUrls  String[]     @default([])
-  status     ReviewStatus @default(PENDING)
-  userId     String?
-  user       User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
-  guestName  String?
-  guestPhone String?
-  guestEmail String?
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id              String             @id @default(cuid())
+  content         String
+  imageUrls       String[]           @default([])
+  status          ReviewStatus       @default(PENDING)
+  userId          String?
+  user            User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  staffProfileId  String?
+  staffProfile    StaffAdminProfile? @relation(fields: [staffProfileId], references: [id], onDelete: SetNull)
+  guestName       String?
+  guestPhone      String?
+  guestEmail      String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 
   @@index([status, createdAt])
+  @@index([staffProfileId, status, createdAt])
 }
 
 model MemberNotification {

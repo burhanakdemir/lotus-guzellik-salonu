@@ -39,7 +39,21 @@ const statusClass: Record<ReviewRow["status"], string> = {
   REJECTED: "bg-red-100 text-red-800",
 };
 
-export function ReviewsAdmin({ initialReviews }: { initialReviews: ReviewRow[] }) {
+function reviewsApiQuery(personelSlug: string | null | undefined) {
+  return personelSlug
+    ? `?personel=${encodeURIComponent(personelSlug)}`
+    : "";
+}
+
+export function ReviewsAdmin({
+  initialReviews,
+  personelSlug = null,
+  scopeLabel = null,
+}: {
+  initialReviews: ReviewRow[];
+  personelSlug?: string | null;
+  scopeLabel?: string | null;
+}) {
   const router = useRouter();
   const [reviews, setReviews] = useState(initialReviews);
   const [error, setError] = useState("");
@@ -61,7 +75,7 @@ export function ReviewsAdmin({ initialReviews }: { initialReviews: ReviewRow[] }
   }, [editNewFiles]);
 
   async function refresh() {
-    const res = await fetch("/api/admin/reviews");
+    const res = await fetch(`/api/admin/reviews${reviewsApiQuery(personelSlug)}`);
     if (res.ok) {
       const data = (await res.json()) as Array<
         Omit<ReviewRow, "createdAt"> & { createdAt: string }

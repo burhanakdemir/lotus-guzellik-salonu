@@ -15,7 +15,23 @@ export type GalleryItemRow = {
   isActive: boolean;
 };
 
-export function GalleryAdmin({ initialItems }: { initialItems: GalleryItemRow[] }) {
+function galleryApiQuery(personelSlug: string | null | undefined) {
+  return personelSlug
+    ? `?personel=${encodeURIComponent(personelSlug)}`
+    : "";
+}
+
+export function GalleryAdmin({
+  initialItems,
+  personelSlug = null,
+  canUpload = true,
+  scopeLabel = null,
+}: {
+  initialItems: GalleryItemRow[];
+  personelSlug?: string | null;
+  canUpload?: boolean;
+  scopeLabel?: string | null;
+}) {
   const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [error, setError] = useState("");
@@ -29,7 +45,7 @@ export function GalleryAdmin({ initialItems }: { initialItems: GalleryItemRow[] 
   const [replaceFile, setReplaceFile] = useState<File | null>(null);
 
   async function refresh() {
-    const res = await fetch("/api/admin/gallery");
+    const res = await fetch(`/api/admin/gallery${galleryApiQuery(personelSlug)}`);
     if (res.ok) setItems(await res.json());
     router.refresh();
   }
@@ -47,6 +63,7 @@ export function GalleryAdmin({ initialItems }: { initialItems: GalleryItemRow[] 
       fd.append("file", file);
       fd.append("title", title);
       fd.append("description", description);
+      if (personelSlug) fd.append("personel", personelSlug);
       const res = await fetch("/api/admin/gallery", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) {
@@ -156,8 +173,18 @@ export function GalleryAdmin({ initialItems }: { initialItems: GalleryItemRow[] 
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
       )}
 
+      {!canUpload && (
+        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          Yükleme için üstten bir usta seçin.
+        </p>
+      )}
+
+      {canUpload && (
       <form onSubmit={handleUpload} className="card space-y-3">
-        <h2 className="text-sm font-semibold text-gray-800">Yeni içerik ekle</h2>
+        <h2 className="text-sm font-semibold text-gray-800">
+          Yeni içerik ekle
+          {scopeLabel ? ` — ${scopeLabel}` : ""}
+        </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className="label">Başlık *</label>
@@ -197,6 +224,7 @@ export function GalleryAdmin({ initialItems }: { initialItems: GalleryItemRow[] 
           {uploading ? "Yükleniyor…" : "Galeriye Ekle"}
         </button>
       </form>
+      )}
 
       <div className="space-y-3">
         <h2 className="text-sm font-semibold text-gray-800">

@@ -17,8 +17,9 @@ const superLinks = [
 ];
 
 const staffLinks = [
-  { href: "/admin", label: "Özet" },
   { href: "/admin/randevular", label: "Randevu" },
+  { href: "/admin/galeri", label: "Galeri" },
+  { href: "/admin/yorumlar", label: "Yorum" },
 ];
 
 type AdminNavProps = {

@@ -12,6 +12,7 @@ import { prisma } from "./prisma";
 import { isMultiAdminEnabled, isStaffAdmin, isSuperAdmin } from "./staff-admin";
 import { normalizePhone } from "./utils";
 import { createTotpPendingToken } from "./totp-pending";
+import { assertStaffContentAccess } from "./staff-content-scope";
 
 export { hashPassword, verifyPassword } from "./password";
 
@@ -222,6 +223,13 @@ export async function requireSuperAdmin(): Promise<SessionUser> {
 export async function requireAppointmentAccess(): Promise<SessionUser> {
   const session = await getSession();
   assertAppointmentAccess(session);
+  return session;
+}
+
+/** Galeri / yorum modülü API'leri */
+export async function requireStaffContentAccess(): Promise<SessionUser> {
+  const session = await getSession();
+  assertStaffContentAccess(session);
   return session;
 }
 

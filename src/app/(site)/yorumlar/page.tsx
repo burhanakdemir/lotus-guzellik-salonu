@@ -1,7 +1,9 @@
 import { CustomerReviews } from "@/components/CustomerReviews";
 import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
+import { StaffPublicPicker } from "@/components/public/StaffPublicPicker";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { loadActiveStaffForPublic } from "@/lib/staff-content-scope";
 
 export const metadata = {
   title: "Sizden Gelen Yorumlar | LOTUS Güzellik Salonu",
@@ -12,20 +14,24 @@ export default async function YorumlarPage() {
   const session = await getSession();
   const isMember = session?.role === "MEMBER";
 
-  const rows = await prisma.customerReview.findMany({
-    where: { status: "APPROVED" },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      content: true,
-      imageUrls: true,
-      createdAt: true,
-      user: { select: { name: true } },
-      guestName: true,
-    },
-  });
+  const [staff, legacyRows] = await Promise.all([
+    loadActiveStaffForPublic(),
+    prisma.customerReview.findMany({
+      where: { status: "APPROVED", staffProfileId: null },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      select: {
+        id: true,
+        content: true,
+        imageUrls: true,
+        createdAt: true,
+        user: { select: { name: true } },
+        guestName: true,
+      },
+    }),
+  ]);
 
-  const initialReviews = rows.map((r) => ({
+  const legacyReviews = legacyRows.map((r) => ({
     id: r.id,
     content: r.content,
     imageUrls: r.imageUrls,
@@ -51,13 +57,37 @@ export default async function YorumlarPage() {
             Sizden Gelen Yorumlar
           </h1>
           <p className="mt-4 text-rose-100/90">
-            Salonumuzdaki deneyiminizi paylaşın, diğer misafirlerimiz okusun
+            Ustanızı seçerek yorum bırakın veya okuyun
           </p>
         </div>
       </section>
 
       <div className="mx-auto max-w-7xl px-4 py-6 md:py-16 lg:px-8">
-        <CustomerReviews initialReviews={initialReviews} member={member} />
+        <StaffPublicPicker staff={staff} basePath="/yorumlar" title="Usta yorumları" />
+
+        {legacyReviews.length > 0 && (
+          <section className="mt-10">
+            <h2 className="font-display mb-4 text-center text-2xl text-lotus-800">
+              Genel yorumlar
+            </h2>
+            <CustomerReviews initialReviews={legacyReviews} member={member} />
+          </section>
+        )}
+
+        {staff.length === 0 && legacyReviews.length === 0 && (
+          <p className="text-center text-sm text-gray-500">
+            Henüz yorum yok.{" "}
+            {staff.length > 0 ? (
+              "Bir usta seçerek yorum bırakabilirsiniz."
+            ) : null}
+          </p>
+        )}
+
+        {staff.length > 0 && legacyReviews.length === 0 && (
+          <p className="mt-6 text-center text-sm text-gray-600">
+            Yorum bırakmak için yukarıdan bir usta seçin.
+          </p>
+        )}
       </div>
     </div>
   );

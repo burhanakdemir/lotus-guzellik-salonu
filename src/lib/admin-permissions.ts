@@ -72,7 +72,11 @@ export function assertCanEditAppointment(
 export function isStaffAdminPath(pathname: string): boolean {
   return (
     pathname === "/admin/randevular" ||
-    pathname.startsWith("/admin/randevular/")
+    pathname.startsWith("/admin/randevular/") ||
+    pathname === "/admin/galeri" ||
+    pathname.startsWith("/admin/galeri/") ||
+    pathname === "/admin/yorumlar" ||
+    pathname.startsWith("/admin/yorumlar/")
   );
 }
 

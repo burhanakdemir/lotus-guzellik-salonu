@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -125,6 +126,11 @@ export default function AdminGirisPage() {
 
   return (
     <div className="card w-full max-w-sm space-y-3">
+      <div className="flex justify-center">
+        <Link href="/" className="admin-nav__btn">
+          Ana Sayfa
+        </Link>
+      </div>
       <h1 className="!mb-0 font-display text-xl text-lotus-900">Ustalar Girişi</h1>
       <p className="text-[11px] text-gray-500">
         Süper admin: Google Authenticator ile doğrulama

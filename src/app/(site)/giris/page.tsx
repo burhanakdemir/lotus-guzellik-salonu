@@ -4,8 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+type LoginMode = "member" | "staff";
+
 export default function GirisPage() {
   const router = useRouter();
+  const [mode, setMode] = useState<LoginMode>("member");
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -37,7 +40,57 @@ export default function GirisPage() {
         <h1 className="font-display text-4xl text-rose-900">Giriş</h1>
         <div className="gold-line" />
       </div>
-      <form onSubmit={handleSubmit} className="card mt-8 space-y-5 shadow-lg">
+
+      <div
+        className="site-mobile-only mt-6 grid grid-cols-2 gap-2"
+        role="tablist"
+        aria-label="Giriş türü"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "member"}
+          className={`btn-gold w-full !py-2.5 ${
+            mode === "member" ? "ring-2 ring-lotus-800 ring-offset-2" : "opacity-80"
+          }`}
+          onClick={() => {
+            setMode("member");
+            setError("");
+          }}
+        >
+          Üye Girişi
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "staff"}
+          className={`btn-gold w-full !py-2.5 ${
+            mode === "staff" ? "ring-2 ring-lotus-800 ring-offset-2" : "opacity-80"
+          }`}
+          onClick={() => {
+            setMode("staff");
+            setError("");
+          }}
+        >
+          Usta Girişi
+        </button>
+      </div>
+
+      {mode === "staff" ? (
+        <div className="site-mobile-only card mt-6 space-y-4 text-center shadow-lg">
+          <p className="text-sm leading-relaxed text-lotus-800/80">
+            Salon yönetimi ve usta paneli için ayrı giriş ekranına yönlendirilirsiniz.
+          </p>
+          <Link href="/admin/giris" className="btn-gold inline-flex w-full justify-center">
+            Usta Girişine Devam
+          </Link>
+        </div>
+      ) : null}
+
+      <form
+        onSubmit={handleSubmit}
+        className={`card mt-8 space-y-5 shadow-lg ${mode === "staff" ? "site-desktop-only" : ""}`}
+      >
         {error && (
           <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
         )}

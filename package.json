@@ -12,6 +12,7 @@
     "start:prod": "npx tsx scripts/prod-setup.ts && next start",
     "start:render": "npx tsx scripts/prod-setup.ts && next start -H 0.0.0.0",
     "prod:setup": "npx tsx scripts/prod-setup.ts",
+    "admin:reset-totp": "npx tsx scripts/reset-admin-totp.ts --confirm",
     "lint": "next lint",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",

@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
 import { mkdir, writeFile, unlink } from "fs/promises";
 import { ensureAdminUser } from "./ensure-admin";
+import { resetSuperAdminTotp } from "./reset-admin-totp";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -69,6 +70,17 @@ async function main() {
   const prisma = new PrismaClient();
   try {
     await ensureAdminUser(prisma);
+
+    const resetTotp =
+      process.env.RESET_ADMIN_TOTP === "true" ||
+      process.env.RESET_ADMIN_TOTP === "1";
+    if (resetTotp) {
+      console.log("\n→ RESET_ADMIN_TOTP: süper admin authenticator sıfırlanıyor (tek seferlik)…");
+      await resetSuperAdminTotp(prisma);
+      console.log(
+        "→ Deploy sonrası Render'dan RESET_ADMIN_TOTP değişkenini kaldırın (tekrar sıfırlamasın)."
+      );
+    }
 
     const featuredMigrated = await prisma.service.updateMany({
       where: { isFeatured: true, deletedAt: null, showPriceOnHomepage: false },

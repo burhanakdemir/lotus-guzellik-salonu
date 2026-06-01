@@ -39,6 +39,8 @@ interface RandevuFormProps {
   initialSlug?: string;
   showPrice?: boolean;
   showDuration?: boolean;
+  /** İstanbul — date input min (yyyy-MM-dd) */
+  minBookingDate?: string;
 }
 
 function staffCanDoService(
@@ -59,6 +61,7 @@ export function RandevuForm({
   initialSlug,
   showPrice = true,
   showDuration = true,
+  minBookingDate,
 }: RandevuFormProps) {
   const searchParams = useSearchParams();
   const slugParam = searchParams.get("hizmet") || initialSlug;
@@ -126,6 +129,7 @@ export function RandevuForm({
   }, [assignedStaffId, serviceId, staffServiceMap]);
 
   const selectedService = services.find((s) => s.id === serviceId);
+  const timeStep = hasStaffChoice ? 5 : 4;
 
   const loadSlots = useCallback(async () => {
     if (!date || !serviceId) return;
@@ -138,15 +142,14 @@ export function RandevuForm({
       if (hasStaffChoice && assignedStaffId) {
         params.set("assignedStaffId", assignedStaffId);
       }
-      const normalized = normalizePhone(phone);
-      if (normalized.length === 10) params.set("phone", normalized);
       const res = await fetch(`/api/appointments/slots?${params}`);
       const data = await res.json();
       if (data.error) {
-        setError(data.error);
         setSlots([]);
+        if (step >= timeStep) setError(data.error);
       } else {
         setSlots(data.slots || []);
+        if (step >= timeStep) setError("");
       }
     } catch {
       setError("Müsait saatler yüklenemedi. Sayfayı yenileyip tekrar deneyin.");
@@ -154,15 +157,14 @@ export function RandevuForm({
     } finally {
       setLoadingSlots(false);
     }
-  }, [date, serviceId, phone, assignedStaffId, hasStaffChoice]);
-
-  const timeStep = hasStaffChoice ? 5 : 4;
+  }, [date, serviceId, assignedStaffId, hasStaffChoice, step, timeStep]);
 
   useEffect(() => {
     if (step >= timeStep - 1 && date && serviceId) loadSlots();
-  }, [step, date, serviceId, phone, assignedStaffId, loadSlots, timeStep]);
+  }, [step, date, serviceId, assignedStaffId, loadSlots, timeStep]);
 
-  const minDate = new Date().toISOString().split("T")[0];
+  const minDate =
+    minBookingDate ?? new Date().toISOString().split("T")[0];
 
   async function handleSubmit() {
     if (submitting) return;

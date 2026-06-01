@@ -5,13 +5,13 @@ import {
   timeRangesOverlap,
 } from "@/lib/blocked-slots";
 import { prisma } from "./prisma";
-import { getDayOfWeek, todayString } from "./timezone";
-import { getWorkHoursForDay, minutesToTime, normalizePhone, timeToMinutes } from "./utils";
+import { formatInTimeZone } from "date-fns-tz";
+import { getDayOfWeek, todayString, TZ } from "./timezone";
+import { getWorkHoursForDay, minutesToTime, timeToMinutes } from "./utils";
 
 export async function getAvailableSlots(
   date: string,
   serviceId: string,
-  phone?: string,
   assignedStaffId?: string,
   excludeAppointmentId?: string
 ): Promise<{ slots: string[]; error?: string }> {
@@ -75,27 +75,27 @@ export async function getAvailableSlots(
     if (!overlapsAppointment && !overlapsBlock) slots.push(startTime);
   }
 
-  if (phone) {
-    const normalized = normalizePhone(phone);
-    if (normalized.length === 10) {
-      const userAppts = await prisma.appointment.findMany({
-        where: {
-          date,
-          phone: normalized,
-          status: { in: ["PENDING", "CONFIRMED"] },
-          ...(excludeAppointmentId ? { id: { not: excludeAppointmentId } } : {}),
-        },
-      });
-      if (userAppts.length > 0) {
-        return {
-          slots: [],
-          // Telefon bazlı doğrulama sonucu saldırgan tarafından enum edilebilir.
-          // Bu yüzden hata mesajını genel tutuyoruz.
-          error: "Uygun saat yok.",
-        };
-      }
+  let available = slots;
+  if (date === todayString()) {
+    const nowMin = timeToMinutes(formatInTimeZone(new Date(), TZ, "HH:mm"));
+    available = slots.filter((t) => timeToMinutes(t) > nowMin);
+    if (available.length === 0 && slots.length > 0) {
+      return {
+        slots: [],
+        error: "Bugün için müsait saat kalmadı.",
+      };
     }
   }
 
-  return { slots };
+  if (available.length === 0) {
+    return {
+      slots: [],
+      error:
+        date === todayString()
+          ? "Bugün için müsait saat kalmadı."
+          : "Bu tarih için müsait saat yok.",
+    };
+  }
+
+  return { slots: available };
 }

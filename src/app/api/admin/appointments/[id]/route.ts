@@ -121,7 +121,6 @@ export async function PATCH(
       const { slots, error: slotError } = await getAvailableSlots(
         nextDate,
         nextServiceId,
-        undefined,
         staffId ?? undefined,
         id
       );

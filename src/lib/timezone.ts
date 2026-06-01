@@ -28,7 +28,8 @@ export function parseDateString(dateStr: string): Date {
   return toZonedTime(new Date(y, m - 1, d, 12, 0, 0), TZ);
 }
 
+/** 0 = Pazar … 6 = Cumartesi (sunucu saat diliminden bağımsız) */
 export function getDayOfWeek(dateStr: string): number {
-  const d = parseDateString(dateStr);
-  return d.getDay();
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
 }

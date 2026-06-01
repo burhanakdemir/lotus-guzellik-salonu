@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession, type SessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { bookingBlockMinutes } from "@/lib/appointment-booking-duration";
+import { hasActiveAppointmentOnDate } from "@/lib/appointment-duplicate";
 import { getAvailableSlots } from "@/lib/slots";
 import { staffCanPerformService } from "@/lib/staff-services";
 import { isMultiAdminEnabled } from "@/lib/staff-admin";
@@ -85,10 +86,19 @@ export async function POST(req: Request) {
       }
     }
 
+    if (await hasActiveAppointmentOnDate(phone, data.date)) {
+      return NextResponse.json(
+        {
+          error:
+            "Bu tarihte zaten aktif bir randevunuz var. Başka bir gün seçin veya hesabınızdan mevcut randevunuza bakın.",
+        },
+        { status: 400 }
+      );
+    }
+
     const { slots, error } = await getAvailableSlots(
       data.date,
       data.serviceId,
-      phone,
       assignedStaffId ?? undefined
     );
     if (error) {

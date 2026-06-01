@@ -33,7 +33,6 @@ export async function GET(req: Request) {
     const result = await getAvailableSlots(
       parsed.date,
       parsed.serviceId,
-      undefined,
       assignedStaffIdForSlots,
       parsed.excludeAppointmentId
     );

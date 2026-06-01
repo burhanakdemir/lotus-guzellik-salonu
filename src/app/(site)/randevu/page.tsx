@@ -5,6 +5,7 @@ import { getSalonDisplaySettings } from "@/lib/salon-display";
 import { getStaffDisplayName } from "@/lib/staff-display-name";
 import { orderStaffProfilesForPanel } from "@/lib/staff-panel";
 import { isMultiAdminEnabled } from "@/lib/staff-admin";
+import { todayString } from "@/lib/timezone";
 import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { RandevuForm } from "@/components/RandevuForm";
 
@@ -85,6 +86,7 @@ export default async function RandevuPage(props: {
             initialSlug={initialHizmetSlug}
             showPrice={display.showPrice}
             showDuration={display.showDuration}
+            minBookingDate={todayString()}
           />
         </Suspense>
       </div>

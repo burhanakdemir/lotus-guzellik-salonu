@@ -120,7 +120,6 @@ export async function POST(req: Request) {
     const slotCheck = await getAvailableSlots(
       data.date,
       data.serviceId,
-      undefined,
       assignedStaffId ?? undefined
     );
     if (!slotCheck.slots.includes(data.startTime)) {

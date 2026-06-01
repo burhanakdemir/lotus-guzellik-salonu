@@ -3,16 +3,21 @@
 import { useEffect, useState } from "react";
 import type { CalendarAppointment } from "@/components/admin/AppointmentsCalendar";
 import type { AdminServiceOption } from "@/components/admin/AppointmentsAdmin";
+import { bookingBlockMinutes } from "@/lib/appointment-booking-duration";
 import { minutesToTime, timeToMinutes } from "@/lib/time-format";
 
 export function EditAppointmentModal({
   apt,
   services,
+  showServiceDuration,
+  slotInterval,
   onClose,
   onSaved,
 }: {
   apt: CalendarAppointment;
   services: AdminServiceOption[];
+  showServiceDuration: boolean;
+  slotInterval: number;
   onClose: () => void;
   onSaved: (updated: CalendarAppointment) => void;
 }) {
@@ -29,7 +34,13 @@ export function EditAppointmentModal({
 
   const selectedService = services.find((s) => s.id === serviceId);
   const endPreview = selectedService
-    ? minutesToTime(timeToMinutes(startTime) + selectedService.durationMinutes)
+    ? minutesToTime(
+        timeToMinutes(startTime) +
+          bookingBlockMinutes(
+            { showServiceDuration, slotInterval },
+            selectedService
+          )
+      )
     : apt.endTime;
 
   useEffect(() => {

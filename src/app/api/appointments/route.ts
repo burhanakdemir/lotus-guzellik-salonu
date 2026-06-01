@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession, type SessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { bookingBlockMinutes } from "@/lib/appointment-booking-duration";
 import { getAvailableSlots } from "@/lib/slots";
 import { staffCanPerformService } from "@/lib/staff-services";
 import { isMultiAdminEnabled } from "@/lib/staff-admin";
@@ -100,8 +101,20 @@ export async function POST(req: Request) {
       );
     }
 
+    const salonSettings = await prisma.salonSettings.findUnique({
+      where: { id: "default" },
+    });
+    if (!salonSettings) {
+      return NextResponse.json(
+        { error: "Salon ayarları bulunamadı." },
+        { status: 500 }
+      );
+    }
+
     const startMin = timeToMinutes(data.startTime);
-    const endTime = minutesToTime(startMin + service.durationMinutes);
+    const endTime = minutesToTime(
+      startMin + bookingBlockMinutes(salonSettings, service)
+    );
 
     const userId = await resolveMemberUserId(phone);
 

@@ -40,7 +40,7 @@ type MemberNameSource = Pick<AppointmentLineSource, "name" | "user"> & {
   memberDisplayName?: string | null;
 };
 
-/** Alt satır 1. alan — randevu alan üye ad soyad */
+/** Randevu alan üye / misafir ad soyad (yönetici takma adı değil) */
 export function getAppointmentMemberDisplayName(apt: MemberNameSource): string {
   const preset = apt.memberDisplayName?.trim();
   if (preset) return preset;
@@ -50,10 +50,15 @@ export function getAppointmentMemberDisplayName(apt: MemberNameSource): string {
     return fromUser;
   }
   const fromBooking = apt.name.trim();
-  if (!isLotusAdminAlias(fromBooking)) {
+  if (fromBooking && !isLotusAdminAlias(fromBooking)) {
     return fromBooking;
   }
   return fromUser || fromBooking;
+}
+
+/** Onaylı liste — öncelik sunucuda çözümlenmiş üye adı */
+export function getAppointmentBookerName(apt: MemberNameSource): string {
+  return apt.memberDisplayName?.trim() || getAppointmentMemberDisplayName(apt);
 }
 
 export type AdminAppointmentDisplay = {

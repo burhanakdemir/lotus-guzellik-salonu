@@ -47,13 +47,21 @@ export default async function AdminRandevularPage(props: {
     initialActiveStaffId = session.staffProfileId;
   }
 
-  const [{ today, monthRange, appointments, services }, staffStatusCountMap, scopedCounts] =
-    await Promise.all([
+  const [
+    { today, monthRange, appointments, services },
+    staffStatusCountMap,
+    scopedCounts,
+    salonSettings,
+  ] = await Promise.all([
       loadAdminAppointmentsData(session),
       superAdmin && multiAdmin
         ? loadStaffStatusCountMap()
         : Promise.resolve(null),
       loadAdminAppointmentStatusCounts(session, initialActiveStaffId),
+      prisma.salonSettings.findUnique({
+        where: { id: "default" },
+        select: { showServiceDuration: true, slotInterval: true },
+      }),
     ]);
 
   const tabCounts =
@@ -88,6 +96,8 @@ export default async function AdminRandevularPage(props: {
           pendingTotalCount={tabCounts.pending}
           confirmedTotalCount={tabCounts.confirmed}
           staffStatusCountMap={staffStatusCountMap}
+          showServiceDuration={salonSettings?.showServiceDuration ?? true}
+          slotInterval={salonSettings?.slotInterval ?? 30}
         />
       </Suspense>
     </div>

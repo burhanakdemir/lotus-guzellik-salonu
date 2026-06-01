@@ -10,7 +10,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Geçersiz tarih" }, { status: 400 });
     }
 
-    const schedule = await getSalonDaySchedule(date);
+    const staffId = new URL(req.url).searchParams.get("staffId");
+    const schedule = await getSalonDaySchedule(
+      date,
+      staffId || undefined
+    );
     return NextResponse.json(schedule);
   } catch {
     return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });

@@ -1,3 +1,4 @@
+import { getBlockedSlotsForDate, type BlockedTimeSlotRow } from "@/lib/blocked-slots";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_SALON_SETTINGS, getSalonSettingsSafe } from "@/lib/db-safe";
 import { getDayOfWeek } from "@/lib/timezone";
@@ -14,12 +15,18 @@ export type SalonDaySchedule = {
   slots: string[];
   markedClosed?: boolean;
   closedReason?: string | null;
+  blockedSlots?: BlockedTimeSlotRow[];
 };
 
-export async function getSalonDaySchedule(date: string): Promise<SalonDaySchedule> {
+export async function getSalonDaySchedule(
+  date: string,
+  staffId?: string | null
+): Promise<SalonDaySchedule> {
   const settings = (await getSalonSettingsSafe()) ?? DEFAULT_SALON_SETTINGS;
   const closedDay = await prisma.closedDay.findUnique({ where: { date } });
   const hours = getWorkHoursForDay(getDayOfWeek(date), settings);
+
+  const blockedSlots = await getBlockedSlotsForDate(date, staffId);
 
   if (!hours) {
     return {
@@ -30,6 +37,7 @@ export async function getSalonDaySchedule(date: string): Promise<SalonDaySchedul
       slots: [],
       markedClosed: !!closedDay,
       closedReason: closedDay?.reason ?? null,
+      blockedSlots,
     };
   }
 
@@ -49,5 +57,6 @@ export async function getSalonDaySchedule(date: string): Promise<SalonDaySchedul
     slots,
     markedClosed: !!closedDay,
     closedReason: closedDay?.reason ?? null,
+    blockedSlots,
   };
 }

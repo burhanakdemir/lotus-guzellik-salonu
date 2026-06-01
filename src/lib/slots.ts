@@ -1,3 +1,9 @@
+import { bookingBlockMinutes } from "@/lib/appointment-booking-duration";
+import {
+  blockAppliesToStaff,
+  getBlockedSlotsForDate,
+  timeRangesOverlap,
+} from "@/lib/blocked-slots";
 import { prisma } from "./prisma";
 import { getDayOfWeek, todayString } from "./timezone";
 import { getWorkHoursForDay, minutesToTime, normalizePhone, timeToMinutes } from "./utils";
@@ -32,8 +38,8 @@ export async function getAvailableSlots(
 
   const openMin = timeToMinutes(hours.open);
   const closeMin = timeToMinutes(hours.close);
-  const duration = service.durationMinutes;
   const interval = settings.slotInterval;
+  const blockMinutes = bookingBlockMinutes(settings, service);
 
   const appointments = await prisma.appointment.findMany({
     where: {
@@ -44,22 +50,29 @@ export async function getAvailableSlots(
     select: { id: true, startTime: true, endTime: true },
   });
 
+  const blockedSlots = await getBlockedSlotsForDate(date, assignedStaffId ?? null);
+  const relevantBlocks = blockedSlots.filter((b) =>
+    blockAppliesToStaff(b, assignedStaffId ?? null)
+  );
+
   const slots: string[] = [];
-  for (let start = openMin; start + duration <= closeMin; start += interval) {
-    const end = start + duration;
+  for (let start = openMin; start + blockMinutes <= closeMin; start += interval) {
+    const end = start + blockMinutes;
     const startTime = minutesToTime(start);
     const endTime = minutesToTime(end);
 
-    const overlaps = appointments.some((apt) => {
+    const overlapsAppointment = appointments.some((apt) => {
       if (excludeAppointmentId && apt.id === excludeAppointmentId) {
         return false;
       }
-      const aptStart = timeToMinutes(apt.startTime);
-      const aptEnd = timeToMinutes(apt.endTime);
-      return start < aptEnd && end > aptStart;
+      return timeRangesOverlap(startTime, endTime, apt.startTime, apt.endTime);
     });
 
-    if (!overlaps) slots.push(startTime);
+    const overlapsBlock = relevantBlocks.some((b) =>
+      timeRangesOverlap(startTime, endTime, b.startTime, b.endTime)
+    );
+
+    if (!overlapsAppointment && !overlapsBlock) slots.push(startTime);
   }
 
   if (phone) {

@@ -92,11 +92,11 @@ export function AppointmentStatusList({
 
   return (
     <div className="apt-status-list space-y-2">
-      <p className="text-[11px] text-gray-500">
-        <Link href={backHref} className="admin-link">
+      <nav className="admin-page-nav" aria-label="Geri dön">
+        <Link href={backHref} className="admin-nav-btn">
           ← Geri
         </Link>
-      </p>
+      </nav>
 
       {statusError && (
         <p className="text-[11px] text-red-600" role="alert">

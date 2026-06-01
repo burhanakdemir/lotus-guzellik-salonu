@@ -102,6 +102,7 @@ model StaffAdminProfile {
   staffNotifications StaffNotification[]
   galleryItems      GalleryItem[]
   reviews           CustomerReview[]
+  blockedTimeSlots  BlockedTimeSlot[]
 
   @@index([isActive, sortOrder])
 }
@@ -260,6 +261,20 @@ model ClosedDay {
   id     String   @id @default(cuid())
   date   String   @unique
   reason String?
+}
+
+/// Admin — belirli gün/saat müşteri randevusuna kapalı (usta veya tüm salon)
+model BlockedTimeSlot {
+  id              String             @id @default(cuid())
+  date            String
+  startTime       String
+  endTime         String
+  assignedStaffId String?
+  assignedStaff   StaffAdminProfile? @relation(fields: [assignedStaffId], references: [id], onDelete: Cascade)
+  reason          String?
+  createdAt       DateTime           @default(now())
+
+  @@index([date, assignedStaffId])
 }
 
 model SiteContent {

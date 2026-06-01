@@ -51,24 +51,19 @@ export function AppointmentApprovalSummary({
   );
 
   const pendingSection = (
-    <section className="card space-y-2">
-      <Link
-        href={pendingHref}
-        className="flex flex-wrap items-center justify-between gap-1 rounded-md -m-1 p-1 transition hover:bg-amber-50/80"
-      >
-        <h3 className="!mb-0 text-sm font-semibold text-lotus-800">
+    <section className="apt-approval-summary__card space-y-2">
+      <Link href={pendingHref} className="apt-approval-summary__card-link">
+        <h3 className="apt-approval-summary__card-title">
           Onay bekleyen randevular
         </h3>
-        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
-          {badgePending}
-        </span>
+        <span className="apt-approval-summary__badge">{badgePending}</span>
       </Link>
-      <p className="text-[10px] text-gray-500">
+      <p className="apt-approval-summary__card-hint">
         Müşteri randevuları usta onayı olmadan onaylanmaz. Başlığa tıklayarak
         tüm listeyi görün.
       </p>
       {pending.length === 0 ? (
-        <p className="text-[11px] text-gray-500">Bekleyen randevu yok.</p>
+        <p className="apt-approval-summary__card-hint">Bekleyen randevu yok.</p>
       ) : (
         <ul className="apt-approval-summary__list max-h-64 space-y-1 overflow-y-auto md:max-h-[28rem]">
           {pending.map((a) => (
@@ -108,7 +103,7 @@ export function AppointmentApprovalSummary({
         </ul>
       )}
       {badgePending > pending.length && (
-        <p className="text-[10px] text-gray-500">
+        <p className="apt-approval-summary__card-hint">
           <Link href={pendingHref} className="admin-link">
             Tümünü gör ({badgePending})
           </Link>
@@ -118,19 +113,14 @@ export function AppointmentApprovalSummary({
   );
 
   const confirmedSection = (
-    <section className="card space-y-1">
-      <Link
-        href={confirmedHref}
-        className="flex flex-wrap items-center justify-between gap-1 rounded-md -m-1 p-1 transition hover:bg-lotus-50/80"
-      >
-        <h3 className="!mb-0 text-sm font-semibold text-lotus-800">
+    <section className="apt-approval-summary__card space-y-1">
+      <Link href={confirmedHref} className="apt-approval-summary__card-link">
+        <h3 className="apt-approval-summary__card-title">
           Onaylı randevularınız
         </h3>
-        <span className="rounded-full bg-lotus-100 px-2 py-0.5 text-[10px] font-semibold text-lotus-900">
-          {confirmedCount}
-        </span>
+        <span className="apt-approval-summary__badge">{confirmedCount}</span>
       </Link>
-      <p className="text-[10px] text-gray-500">
+      <p className="apt-approval-summary__card-hint">
         Onaylanmış randevuların tam listesi için tıklayın.
       </p>
     </section>

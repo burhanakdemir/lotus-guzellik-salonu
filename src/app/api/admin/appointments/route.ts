@@ -11,6 +11,7 @@ import {
   mapAdminAppointments,
 } from "@/lib/admin-appointments-loader";
 import { getAppointmentStaffFilter } from "@/lib/admin-appointment-status";
+import { bookingBlockMinutes } from "@/lib/appointment-booking-duration";
 import { getAvailableSlots } from "@/lib/slots";
 import { z } from "zod";
 
@@ -101,8 +102,19 @@ export async function POST(req: Request) {
       }
     }
 
+    const salonSettings = await prisma.salonSettings.findUnique({
+      where: { id: "default" },
+    });
+    if (!salonSettings) {
+      return NextResponse.json(
+        { error: "Salon ayarları bulunamadı." },
+        { status: 500 }
+      );
+    }
+
     const endTime = minutesToTime(
-      timeToMinutes(data.startTime) + service.durationMinutes
+      timeToMinutes(data.startTime) +
+        bookingBlockMinutes(salonSettings, service)
     );
 
     const slotCheck = await getAvailableSlots(

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AppointmentStatusList } from "@/components/admin/AppointmentStatusList";
+import { ConfirmedAppointmentsList } from "@/components/admin/ConfirmedAppointmentsList";
 import { mapAdminAppointments } from "@/lib/admin-appointments-loader";
 import {
   loadAdminAppointmentStatusCounts,
@@ -8,6 +8,11 @@ import {
   resolveStaffScopeBySlug,
 } from "@/lib/admin-appointment-status";
 import { getSession, isAdminSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import {
+  getStaffDisplayName,
+  staffAdminProfileNameSelectFull,
+} from "@/lib/staff-display-name";
 import { isMultiAdminEnabled, isSuperAdmin } from "@/lib/staff-admin";
 
 export default async function OnayliRandevularPage(props: {
@@ -29,6 +34,15 @@ export default async function OnayliRandevularPage(props: {
     ? `/admin/randevular?personel=${encodeURIComponent(scope.staffSlug)}`
     : "/admin/randevular";
 
+  let staffBannerName = scope.staffDisplayName;
+  if (!staffBannerName && session.staffProfileId) {
+    const profile = await prisma.staffAdminProfile.findUnique({
+      where: { id: session.staffProfileId },
+      select: staffAdminProfileNameSelectFull,
+    });
+    if (profile) staffBannerName = getStaffDisplayName(profile);
+  }
+
   return (
     <div>
       <h1>
@@ -39,27 +53,22 @@ export default async function OnayliRandevularPage(props: {
       <p className="mb-2 text-[11px] text-gray-500">
         Toplam{" "}
         <span className="font-semibold text-lotus-800">{confirmedCount}</span>{" "}
-        randevu · tarih ve saate göre sıralı
+        onaylı randevu · gelecek / geçmiş sekmeleri, aynı tablo düzeni
       </p>
-      <p className="mb-2 text-[11px] text-gray-500">
-        <Link href={backHref} className="admin-link">
+      <nav className="admin-page-nav mb-3" aria-label="Sayfa gezintisi">
+        <Link href={backHref} className="admin-nav-btn">
           Randevular
         </Link>
         {superAdmin && (
-          <>
-            {" · "}
-            <Link href="/admin" className="admin-link">
-              Özet
-            </Link>
-          </>
+          <Link href="/admin" className="admin-nav-btn">
+            Özet
+          </Link>
         )}
-      </p>
-      <AppointmentStatusList
+      </nav>
+      <ConfirmedAppointmentsList
         appointments={await mapAdminAppointments(confirmedRows)}
-        variant="confirmed"
-        isSuperAdmin={superAdmin}
-        currentStaffProfileId={session.staffProfileId ?? null}
-        multiAdminEnabled={multiAdmin}
+        showStaff={multiAdmin}
+        staffBannerName={staffBannerName}
         backHref={backHref}
       />
     </div>

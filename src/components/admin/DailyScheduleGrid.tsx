@@ -6,7 +6,12 @@ import { tr } from "date-fns/locale";
 import type { CalendarAppointment } from "@/components/admin/AppointmentsCalendar";
 import type { AdminServiceOption } from "@/components/admin/AppointmentsAdmin";
 import { getAppointmentMemberDisplayName } from "@/lib/admin-appointment-line";
-import { timeToMinutes } from "@/lib/time-format";
+import { slotStartIsBlocked } from "@/lib/blocked-slots";
+import {
+  minutesToTime,
+  normalizeTimeHHmm,
+  timeToMinutes,
+} from "@/lib/time-format";
 
 export const statusChip: Record<string, string> = {
   PENDING: "apt-chip apt-chip--pending",
@@ -26,9 +31,13 @@ import type { SalonDaySchedule } from "@/lib/salon-schedule";
 
 function aptOccupiesSlot(apt: CalendarAppointment, slotTime: string): boolean {
   const slotMin = timeToMinutes(slotTime);
-  return (
-    slotMin >= timeToMinutes(apt.startTime) && slotMin < timeToMinutes(apt.endTime)
-  );
+  const startMin = timeToMinutes(normalizeTimeHHmm(apt.startTime));
+  const endMin = timeToMinutes(normalizeTimeHHmm(apt.endTime));
+  return slotMin >= startMin && slotMin < endMin;
+}
+
+function aptStartsAtSlot(apt: CalendarAppointment, slotTime: string): boolean {
+  return normalizeTimeHHmm(apt.startTime) === normalizeTimeHHmm(slotTime);
 }
 
 export function DailyScheduleGrid({
@@ -41,6 +50,9 @@ export function DailyScheduleGrid({
   highlightStaffProfileId,
   onSelect,
   onSlotClick,
+  onUnblockSlot,
+  scheduleStaffId,
+  scheduleRefreshKey = 0,
   initialSchedule = null,
 }: {
   cursor: Date;
@@ -52,6 +64,9 @@ export function DailyScheduleGrid({
   highlightStaffProfileId?: string;
   onSelect: (a: CalendarAppointment) => void;
   onSlotClick: (startTime: string) => void;
+  onUnblockSlot?: (blockId: string) => void | Promise<void>;
+  scheduleStaffId?: string | null;
+  scheduleRefreshKey?: number;
   initialSchedule?: SalonDaySchedule | null;
 }) {
   const [schedule, setSchedule] = useState<SalonDaySchedule | null>(
@@ -63,7 +78,10 @@ export function DailyScheduleGrid({
   const [scheduleError, setScheduleError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialSchedule?.date === dateKey) {
+    if (
+      scheduleRefreshKey === 0 &&
+      initialSchedule?.date === dateKey
+    ) {
       setSchedule(initialSchedule);
       setScheduleLoading(false);
       setScheduleError(null);
@@ -74,7 +92,11 @@ export function DailyScheduleGrid({
     setScheduleLoading(true);
     setScheduleError(null);
 
-    fetch(`/api/admin/appointments/schedule?date=${dateKey}`)
+    const staffQ =
+      scheduleStaffId != null && scheduleStaffId !== ""
+        ? `&staffId=${encodeURIComponent(scheduleStaffId)}`
+        : "";
+    fetch(`/api/admin/appointments/schedule?date=${dateKey}${staffQ}`)
       .then(async (r) => {
         const data = (await r.json()) as SalonDaySchedule & { error?: string };
         if (cancelled) return;
@@ -98,13 +120,13 @@ export function DailyScheduleGrid({
     return () => {
       cancelled = true;
     };
-  }, [dateKey, initialSchedule]);
+  }, [dateKey, initialSchedule, scheduleStaffId, scheduleRefreshKey]);
 
   const activeAppointments = appointments.filter((a) => a.status !== "CANCELLED");
   const dayShort = format(cursor, "EEE", { locale: tr });
   const slotSet = new Set(schedule?.slots ?? []);
   const orphanAppointments = activeAppointments.filter(
-    (a) => !slotSet.has(a.startTime)
+    (a) => !slotSet.has(normalizeTimeHHmm(a.startTime))
   );
 
   return (
@@ -140,18 +162,28 @@ export function DailyScheduleGrid({
           <p className="mt-1 text-[10px] text-gray-500">
             {activeAppointments.length} randevu —{" "}
             {canCreate
-              ? "boş saate tıklayarak randevu ekleyin"
+              ? "boş saate tıklayın — randevu ekleyin veya saati kapatın"
               : "boş saatlere tıklayarak görüntüleyin"}
           </p>
           <div className="apt-calendar__slot-grid mt-2">
             {schedule.slots.map((slotTime) => {
-              const starting = activeAppointments.find(
-                (a) => a.startTime === slotTime
+              const slotEnd = minutesToTime(
+                timeToMinutes(slotTime) + schedule.slotInterval
+              );
+              const starting = activeAppointments.find((a) =>
+                aptStartsAtSlot(a, slotTime)
               );
               const occupied = activeAppointments.some((a) =>
                 aptOccupiesSlot(a, slotTime)
               );
-              const isFree = !occupied;
+              const block = !occupied
+                ? slotStartIsBlocked(
+                    slotTime,
+                    slotEnd,
+                    schedule.blockedSlots ?? []
+                  )
+                : undefined;
+              const isFree = !occupied && !block;
 
               if (starting) {
                 const chip =
@@ -181,6 +213,28 @@ export function DailyScheduleGrid({
                 );
               }
 
+              if (block) {
+                return (
+                  <button
+                    key={slotTime}
+                    type="button"
+                    className="apt-calendar__slot-chip apt-calendar__slot-chip--blocked"
+                    onClick={() =>
+                      canCreate && onUnblockSlot?.(block.id)
+                    }
+                    disabled={!canCreate || !onUnblockSlot}
+                    title={
+                      canCreate
+                        ? "Kapalı — tekrar açmak için tıklayın"
+                        : "Bu saat kapalı"
+                    }
+                  >
+                    <span className="apt-calendar__slot-chip-time">{slotTime}</span>
+                    <span className="apt-calendar__slot-chip-name">Kapalı</span>
+                  </button>
+                );
+              }
+
               if (isFree) {
                 return (
                   <button
@@ -188,8 +242,12 @@ export function DailyScheduleGrid({
                     type="button"
                     className="apt-calendar__slot-chip apt-calendar__slot-chip--free"
                     onClick={() => canCreate && onSlotClick(slotTime)}
-                    disabled={!canCreate || services.length === 0}
-                    title={canCreate ? "Randevu ekle" : "Randevu ekleme yetkisi yok"}
+                    disabled={!canCreate}
+                    title={
+                      canCreate
+                        ? "Randevu ekle veya saati kapat"
+                        : "Randevu ekleme yetkisi yok"
+                    }
                   >
                     {slotTime}
                   </button>
@@ -199,10 +257,12 @@ export function DailyScheduleGrid({
               return (
                 <span
                   key={slotTime}
-                  className="apt-calendar__slot-chip apt-calendar__slot-chip--busy"
-                  aria-hidden
+                  className="apt-calendar__slot-chip apt-calendar__slot-chip--occupied"
+                  title="Randevu — dolu"
+                  aria-label={`${slotTime} dolu`}
                 >
-                  {slotTime}
+                  <span className="apt-calendar__slot-chip-time">{slotTime}</span>
+                  <span className="apt-calendar__slot-chip-name">Dolu</span>
                 </span>
               );
             })}

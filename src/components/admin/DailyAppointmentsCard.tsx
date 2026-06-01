@@ -18,6 +18,9 @@ type Props = {
   highlightStaffProfileId?: string;
   onSelect: (a: CalendarAppointment) => void;
   onSlotClick: (startTime: string) => void;
+  onUnblockSlot?: (blockId: string) => void | Promise<void>;
+  scheduleStaffId?: string | null;
+  scheduleRefreshKey?: number;
   hint?: ReactNode;
   initialSchedule?: SalonDaySchedule | null;
 };
@@ -32,6 +35,9 @@ export function DailyAppointmentsCard({
   highlightStaffProfileId,
   onSelect,
   onSlotClick,
+  onUnblockSlot,
+  scheduleStaffId,
+  scheduleRefreshKey,
   hint,
   initialSchedule = null,
 }: Props) {
@@ -80,6 +86,9 @@ export function DailyAppointmentsCard({
         highlightStaffProfileId={highlightStaffProfileId}
         onSelect={onSelect}
         onSlotClick={onSlotClick}
+        onUnblockSlot={onUnblockSlot}
+        scheduleStaffId={scheduleStaffId}
+        scheduleRefreshKey={scheduleRefreshKey}
         initialSchedule={
           initialSchedule?.date === dateKey ? initialSchedule : null
         }

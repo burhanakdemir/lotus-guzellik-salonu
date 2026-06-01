@@ -41,19 +41,16 @@ export default async function OnayBekleyenRandevularPage(props: {
         <span className="font-semibold text-amber-900">{pendingCount}</span>{" "}
         randevu · tarih ve saate göre sıralı
       </p>
-      <p className="mb-2 text-[11px] text-gray-500">
-        <Link href={backHref} className="admin-link">
+      <nav className="admin-page-nav mb-3" aria-label="Sayfa gezintisi">
+        <Link href={backHref} className="admin-nav-btn">
           Randevular
         </Link>
         {superAdmin && (
-          <>
-            {" · "}
-            <Link href="/admin" className="admin-link">
-              Özet
-            </Link>
-          </>
+          <Link href="/admin" className="admin-nav-btn">
+            Özet
+          </Link>
         )}
-      </p>
+      </nav>
       <AppointmentStatusList
         appointments={await mapAdminAppointments(pendingRows)}
         variant="pending"

@@ -14,6 +14,15 @@ export function todayString(): string {
   return formatInTimeZone(new Date(), TZ, "yyyy-MM-dd");
 }
 
+/** Randevu bitiş saati geçmiş mi (İstanbul) */
+export function isAppointmentInPast(date: string, endTime: string): boolean {
+  const today = todayString();
+  if (date < today) return true;
+  if (date > today) return false;
+  const nowTime = formatInTimeZone(new Date(), TZ, "HH:mm");
+  return endTime <= nowTime;
+}
+
 export function parseDateString(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number);
   return toZonedTime(new Date(y, m - 1, d, 12, 0, 0), TZ);

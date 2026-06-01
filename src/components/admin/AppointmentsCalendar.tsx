@@ -16,6 +16,7 @@ import {
 } from "@/lib/calendar-dates";
 import { todayString } from "@/lib/timezone";
 import { formatPhoneDisplay } from "@/lib/phone";
+import { bookingBlockMinutes } from "@/lib/appointment-booking-duration";
 import { minutesToTime, timeToMinutes } from "@/lib/time-format";
 import { canEditAppointment } from "@/lib/admin-permissions";
 import { AdminAppointmentBlock } from "@/components/admin/AdminAppointmentBlock";
@@ -29,6 +30,7 @@ import {
   DailyScheduleGrid,
   statusChip,
 } from "@/components/admin/DailyScheduleGrid";
+import { SlotActionModal } from "@/components/admin/SlotActionModal";
 
 export interface CalendarAppointment {
   id: string;
@@ -97,6 +99,8 @@ export function AppointmentsCalendar({
   confirmedTotalCount = 0,
   statusListStaffSlug = null,
   initialLoadedRange = null,
+  showServiceDuration = true,
+  slotInterval = 30,
 }: {
   initialAppointments: CalendarAppointment[];
   initialCursor?: string;
@@ -115,6 +119,8 @@ export function AppointmentsCalendar({
   confirmedTotalCount?: number;
   /** Usta sekmesinde liste sayfalarına personel parametresi */
   statusListStaffSlug?: string | null;
+  showServiceDuration?: boolean;
+  slotInterval?: number;
 }) {
   const [view, setView] = useState<CalendarView>(defaultView);
   const [cursor, setCursor] = useState(() => parseDateKey(initialCursor));
@@ -127,6 +133,11 @@ export function AppointmentsCalendar({
     date: string;
     startTime: string;
   } | null>(null);
+  const [slotAction, setSlotAction] = useState<{
+    date: string;
+    startTime: string;
+  } | null>(null);
+  const [scheduleRefreshKey, setScheduleRefreshKey] = useState(0);
   const [viewAppointment, setViewAppointment] =
     useState<CalendarAppointment | null>(null);
   const [editAppointment, setEditAppointment] =
@@ -346,11 +357,15 @@ export function AppointmentsCalendar({
     } else {
       setCreateSlot(null);
     }
+    setScheduleRefreshKey((k) => k + 1);
     return { memberCreated: result.memberCreated };
   }
 
   const selected = visibleAppointments.find((a) => a.id === selectedId) ?? null;
   const dayKey = toDateKey(cursor);
+
+  const scheduleStaffId =
+    filterStaffProfileId ?? assignStaffIdForCreate ?? currentStaffProfileId;
 
   const pendingQueue = useMemo(
     () =>
@@ -388,7 +403,49 @@ export function AppointmentsCalendar({
   function handleSlotClick(startTime: string) {
     if (!canCreate) return;
     setSelectedId(null);
-    setCreateSlot({ date: dayKey, startTime });
+    setSlotAction({ date: dayKey, startTime });
+  }
+
+  async function blockSlot(date: string, startTime: string) {
+    const body: Record<string, unknown> = { date, startTime };
+    const staffId =
+      filterStaffProfileId ?? assignStaffIdForCreate ?? null;
+    if (staffId) {
+      body.assignedStaffId = staffId;
+    }
+    const res = await fetch("/api/admin/appointments/blocked-slots", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(
+        (data as { error?: string }).error || "Saat kapatılamadı."
+      );
+    }
+    setSlotAction(null);
+    setScheduleRefreshKey((k) => k + 1);
+  }
+
+  async function unblockSlot(blockId: string) {
+    if (
+      !window.confirm(
+        "Bu saati tekrar müsait yapmak istiyor musunuz?"
+      )
+    ) {
+      return;
+    }
+    const res = await fetch(
+      `/api/admin/appointments/blocked-slots/${blockId}`,
+      { method: "DELETE" }
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert((data as { error?: string }).error || "Saat açılamadı.");
+      return;
+    }
+    setScheduleRefreshKey((k) => k + 1);
   }
 
   return (
@@ -416,10 +473,13 @@ export function AppointmentsCalendar({
               highlightStaffProfileId={highlightStaffProfileId}
               onSelect={handleDayScheduleSelect}
               onSlotClick={handleSlotClick}
+              onUnblockSlot={canCreate ? unblockSlot : undefined}
+              scheduleStaffId={scheduleStaffId}
+              scheduleRefreshKey={scheduleRefreshKey}
               hint={
                 canCreate && multiAdminEnabled && !isSuperAdmin ? (
                   <p className="text-[10px] text-gray-600">
-                    Boş saate tıklayarak randevu ekleyin. Size atanan randevularda
+                    Boş saate tıklayın — randevu ekleyin veya saati kapatın. Size atanan randevularda
                     &quot;Randevuyu iptal et&quot; ile çıkarabilirsiniz; başkasına
                     atanmış randevular salt okunurdur.
                   </p>
@@ -495,6 +555,9 @@ export function AppointmentsCalendar({
           highlightStaffProfileId={highlightStaffProfileId}
           onSelect={handleDayScheduleSelect}
           onSlotClick={handleSlotClick}
+          onUnblockSlot={canCreate ? unblockSlot : undefined}
+          scheduleStaffId={scheduleStaffId}
+          scheduleRefreshKey={scheduleRefreshKey}
         />
       )}
 
@@ -512,10 +575,28 @@ export function AppointmentsCalendar({
         <EditAppointmentModal
           apt={editAppointment}
           services={services}
+          showServiceDuration={showServiceDuration}
+          slotInterval={slotInterval}
           onClose={() => {
             setEditAppointment(null);
           }}
           onSaved={handleAppointmentSaved}
+        />
+      )}
+
+      {slotAction && (
+        <SlotActionModal
+          date={slotAction.date}
+          startTime={slotAction.startTime}
+          onClose={() => setSlotAction(null)}
+          onBook={() => {
+            setCreateSlot({
+              date: slotAction.date,
+              startTime: slotAction.startTime,
+            });
+            setSlotAction(null);
+          }}
+          onBlock={() => blockSlot(slotAction.date, slotAction.startTime)}
         />
       )}
 
@@ -524,6 +605,8 @@ export function AppointmentsCalendar({
           date={createSlot.date}
           startTime={createSlot.startTime}
           services={services}
+          showServiceDuration={showServiceDuration}
+          slotInterval={slotInterval}
           onClose={() => setCreateSlot(null)}
           onSubmit={createAppointment}
         />
@@ -784,6 +867,9 @@ function DayView({
   highlightStaffProfileId,
   onSelect,
   onSlotClick,
+  onUnblockSlot,
+  scheduleStaffId,
+  scheduleRefreshKey,
 }: {
   cursor: Date;
   dateKey: string;
@@ -794,6 +880,9 @@ function DayView({
   highlightStaffProfileId?: string;
   onSelect: (a: CalendarAppointment) => void;
   onSlotClick: (startTime: string) => void;
+  onUnblockSlot?: (blockId: string) => void | Promise<void>;
+  scheduleStaffId?: string | null;
+  scheduleRefreshKey?: number;
 }) {
   return (
     <DailyScheduleGrid
@@ -806,6 +895,9 @@ function DayView({
       highlightStaffProfileId={highlightStaffProfileId}
       onSelect={onSelect}
       onSlotClick={onSlotClick}
+      onUnblockSlot={onUnblockSlot}
+      scheduleStaffId={scheduleStaffId}
+      scheduleRefreshKey={scheduleRefreshKey}
     />
   );
 }
@@ -820,12 +912,16 @@ function CreateAppointmentModal({
   date,
   startTime,
   services,
+  showServiceDuration,
+  slotInterval,
   onClose,
   onSubmit,
 }: {
   date: string;
   startTime: string;
   services: AdminServiceOption[];
+  showServiceDuration: boolean;
+  slotInterval: number;
   onClose: () => void;
   onSubmit: (payload: {
     name: string;
@@ -891,7 +987,11 @@ function CreateAppointmentModal({
   const selectedService = services.find((s) => s.id === serviceId);
   const endPreview = selectedService
     ? minutesToTime(
-        timeToMinutes(startTime) + selectedService.durationMinutes
+        timeToMinutes(startTime) +
+          bookingBlockMinutes(
+            { showServiceDuration, slotInterval },
+            selectedService
+          )
       )
     : startTime;
 

@@ -2,9 +2,17 @@ import Link from "next/link";
 import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { WhatsAppPhoneLink } from "@/components/WhatsAppPhoneLink";
 import { getSalonSettingsSafe } from "@/lib/db-safe";
+import {
+  buildGoogleMapsDirectionsUrl,
+  buildGoogleMapsEmbedUrl,
+  formatSalonMapAddress,
+} from "@/lib/salon-maps";
 
 export default async function HakkimizdaPage() {
   const settings = await getSalonSettingsSafe();
+  const mapAddress = formatSalonMapAddress(settings?.address, settings?.city);
+  const mapsEmbedUrl = buildGoogleMapsEmbedUrl(mapAddress);
+  const mapsDirectionsUrl = buildGoogleMapsDirectionsUrl(mapAddress);
 
   const workDays = [
     { label: "Pazartesi", open: settings?.mondayOpen, close: settings?.mondayClose },
@@ -45,6 +53,14 @@ export default async function HakkimizdaPage() {
             </h2>
             <p className="mt-4 font-display text-xl text-rose-900">{settings?.address}</p>
             <p className="mt-2 text-gray-500">{settings?.city}</p>
+            <a
+              href={mapsDirectionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary mt-4 inline-flex text-sm"
+            >
+              Yol tarifi al
+            </a>
           </div>
           <div className="card lg:col-span-1">
             <h2 className="text-xs font-bold uppercase tracking-widest text-gold-dark">
@@ -78,14 +94,34 @@ export default async function HakkimizdaPage() {
           </div>
         </div>
 
-        <div className="mt-12 overflow-hidden rounded-3xl shadow-2xl shadow-rose-900/10 ring-1 ring-rose-100">
-          <iframe
-            title="Lotus Güzellik Salonu Konum"
-            src="https://www.google.com/maps?q=Fevziçakmak+Mahallesi+Akşemsettin+Caddesi+No:12/A+Kepez+Antalya&output=embed"
-            className="h-96 w-full border-0"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
+        <div className="mt-12 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-gray-600">
+              Konum: {mapAddress}
+            </p>
+            <a
+              href={mapsDirectionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary inline-flex shrink-0"
+            >
+              Yol tarifi al
+            </a>
+          </div>
+          <div className="overflow-hidden rounded-3xl shadow-2xl shadow-rose-900/10 ring-1 ring-rose-100">
+            <iframe
+              title="Lotus Güzellik Salonu Konum"
+              src={mapsEmbedUrl}
+              className="h-96 w-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+          </div>
+          <p className="text-center text-xs text-gray-500">
+            Haritadaki yol tarifi açılmazsa üstteki{" "}
+            <strong>Yol tarifi al</strong> düğmesini kullanın.
+          </p>
         </div>
       </div>
     </div>

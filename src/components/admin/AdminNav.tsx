@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AdminPendingAppointmentAlert } from "@/components/admin/AdminPendingAppointmentAlert";
 import { StaffNotificationBell } from "@/components/admin/StaffNotificationBell";
 
 const superLinks = [
@@ -64,7 +65,12 @@ export function AdminNav({ session }: AdminNavProps) {
         })}
       </div>
       <div className="admin-nav__actions">
-        {session?.showNotifications && <StaffNotificationBell />}
+        {session?.showNotifications && (
+          <>
+            <AdminPendingAppointmentAlert />
+            <StaffNotificationBell />
+          </>
+        )}
         <Link href="/" className="admin-nav__btn">
           Ana Sayfa
         </Link>

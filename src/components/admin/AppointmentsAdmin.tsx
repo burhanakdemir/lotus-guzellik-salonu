@@ -35,6 +35,8 @@ export function AppointmentsAdmin({
   confirmedTotalCount = 0,
   staffStatusCountMap = null,
   initialLoadedRange = null,
+  showServiceDuration = true,
+  slotInterval = 30,
 }: {
   initialAppointments: CalendarAppointment[];
   initialCursor?: string;
@@ -50,6 +52,8 @@ export function AppointmentsAdmin({
   pendingTotalCount?: number;
   confirmedTotalCount?: number;
   staffStatusCountMap?: Record<string, StaffStatusCounts> | null;
+  showServiceDuration?: boolean;
+  slotInterval?: number;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -161,6 +165,8 @@ export function AppointmentsAdmin({
         pendingTotalCount={scopedStatusCounts.pending}
         confirmedTotalCount={scopedStatusCounts.confirmed}
         statusListStaffSlug={statusListStaffSlug}
+        showServiceDuration={showServiceDuration}
+        slotInterval={slotInterval}
       />
     </div>
   );

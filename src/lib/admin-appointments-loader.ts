@@ -57,7 +57,13 @@ async function buildMemberDisplayNameByPhone(
     const phoneKey = normalizePhone(a.phone);
     if (phoneKey.length !== 10) continue;
     if (map.has(phoneKey)) continue;
-    if (!isLotusAdminAlias(a.name.trim())) continue;
+
+    const fromBooking = a.name.trim();
+    if (fromBooking && !isLotusAdminAlias(fromBooking)) {
+      map.set(phoneKey, fromBooking);
+      continue;
+    }
+
     phonesNeedingLookup.add(phoneKey);
   }
 

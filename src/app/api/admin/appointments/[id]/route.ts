@@ -13,6 +13,7 @@ import { approveAppointment } from "@/lib/appointment-approval";
 import { requireAppointmentAccess } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { staffCanPerformService } from "@/lib/staff-services";
+import { bookingBlockMinutes } from "@/lib/appointment-booking-duration";
 import { getAvailableSlots } from "@/lib/slots";
 import { isSuperAdmin } from "@/lib/staff-admin";
 import { minutesToTime, timeToMinutes } from "@/lib/utils";
@@ -136,8 +137,18 @@ export async function PATCH(
 
       updateData.date = nextDate;
       updateData.startTime = nextStartTime;
+      const salonSettings = await prisma.salonSettings.findUnique({
+        where: { id: "default" },
+      });
+      if (!salonSettings) {
+        return NextResponse.json(
+          { error: "Salon ayarları bulunamadı." },
+          { status: 500 }
+        );
+      }
       updateData.endTime = minutesToTime(
-        timeToMinutes(nextStartTime) + service.durationMinutes
+        timeToMinutes(nextStartTime) +
+          bookingBlockMinutes(salonSettings, service)
       );
       updateData.serviceId = nextServiceId;
     }

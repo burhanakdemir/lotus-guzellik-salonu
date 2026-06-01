@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAvailableSlots } from "@/lib/slots";
+import { getBookingSlotGrid } from "@/lib/slots";
 import { z } from "zod";
 
 const schema = z.object({
@@ -18,7 +18,7 @@ export async function GET(req: Request) {
       assignedStaffId: searchParams.get("assignedStaffId") || undefined,
       excludeAppointmentId: searchParams.get("excludeAppointmentId") || undefined,
     });
-    const result = await getAvailableSlots(
+    const result = await getBookingSlotGrid(
       parsed.date,
       parsed.serviceId,
       parsed.assignedStaffId,

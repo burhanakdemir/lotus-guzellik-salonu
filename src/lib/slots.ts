@@ -9,32 +9,43 @@ import { formatInTimeZone } from "date-fns-tz";
 import { getDayOfWeek, todayString, TZ } from "./timezone";
 import { getWorkHoursForDay, minutesToTime, timeToMinutes } from "./utils";
 
-export async function getAvailableSlots(
+export type BookingSlotStatus = "available" | "full" | "past";
+
+export type BookingSlotOption = {
+  time: string;
+  status: BookingSlotStatus;
+};
+
+type SlotBuildResult =
+  | { ok: true; options: BookingSlotOption[] }
+  | { ok: false; error: string };
+
+async function buildDaySlotOptions(
   date: string,
   serviceId: string,
   assignedStaffId?: string,
   excludeAppointmentId?: string
-): Promise<{ slots: string[]; error?: string }> {
+): Promise<SlotBuildResult> {
   const service = await prisma.service.findFirst({
     where: { id: serviceId, isActive: true, deletedAt: null },
   });
-  if (!service) return { slots: [], error: "Hizmet bulunamadı." };
+  if (!service) return { ok: false, error: "Hizmet bulunamadı." };
 
   if (date < todayString()) {
-    return { slots: [], error: "Geçmiş bir tarih seçilemez." };
+    return { ok: false, error: "Geçmiş bir tarih seçilemez." };
   }
 
   const closed = await prisma.closedDay.findUnique({ where: { date } });
-  if (closed) return { slots: [], error: "Bu gün salon kapalı." };
+  if (closed) return { ok: false, error: "Bu gün salon kapalı." };
 
   const settings = await prisma.salonSettings.findUnique({
     where: { id: "default" },
   });
-  if (!settings) return { slots: [], error: "Salon ayarları bulunamadı." };
+  if (!settings) return { ok: false, error: "Salon ayarları bulunamadı." };
 
   const dayIndex = getDayOfWeek(date);
   const hours = getWorkHoursForDay(dayIndex, settings);
-  if (!hours) return { slots: [], error: "Bu gün çalışma saati yok." };
+  if (!hours) return { ok: false, error: "Bu gün çalışma saati yok." };
 
   const openMin = timeToMinutes(hours.open);
   const closeMin = timeToMinutes(hours.close);
@@ -55,7 +66,12 @@ export async function getAvailableSlots(
     blockAppliesToStaff(b, assignedStaffId ?? null)
   );
 
-  const slots: string[] = [];
+  const isToday = date === todayString();
+  const nowMin = isToday
+    ? timeToMinutes(formatInTimeZone(new Date(), TZ, "HH:mm"))
+    : -1;
+
+  const options: BookingSlotOption[] = [];
   for (let start = openMin; start + blockMinutes <= closeMin; start += interval) {
     const end = start + blockMinutes;
     const startTime = minutesToTime(start);
@@ -72,28 +88,69 @@ export async function getAvailableSlots(
       timeRangesOverlap(startTime, endTime, b.startTime, b.endTime)
     );
 
-    if (!overlapsAppointment && !overlapsBlock) slots.push(startTime);
+    let status: BookingSlotStatus = "available";
+    if (overlapsAppointment || overlapsBlock) {
+      status = "full";
+    } else if (isToday && start <= nowMin) {
+      status = "past";
+    }
+
+    options.push({ time: startTime, status });
   }
 
-  let available = slots;
-  if (date === todayString()) {
-    const nowMin = timeToMinutes(formatInTimeZone(new Date(), TZ, "HH:mm"));
-    available = slots.filter((t) => timeToMinutes(t) > nowMin);
-    if (available.length === 0 && slots.length > 0) {
-      return {
-        slots: [],
-        error: "Bugün için müsait saat kalmadı.",
-      };
-    }
+  if (options.length === 0) {
+    return { ok: false, error: "Bu gün için tanımlı saat yok." };
   }
+
+  return { ok: true, options };
+}
+
+/** Müşteri randevu formu — tüm saatler; dolu olanlar işaretli */
+export async function getBookingSlotGrid(
+  date: string,
+  serviceId: string,
+  assignedStaffId?: string,
+  excludeAppointmentId?: string
+): Promise<{ slots: BookingSlotOption[]; error?: string }> {
+  const built = await buildDaySlotOptions(
+    date,
+    serviceId,
+    assignedStaffId,
+    excludeAppointmentId
+  );
+  if (!built.ok) return { slots: [], error: built.error };
+  return { slots: built.options };
+}
+
+export async function getAvailableSlots(
+  date: string,
+  serviceId: string,
+  assignedStaffId?: string,
+  excludeAppointmentId?: string
+): Promise<{ slots: string[]; error?: string }> {
+  const built = await buildDaySlotOptions(
+    date,
+    serviceId,
+    assignedStaffId,
+    excludeAppointmentId
+  );
+  if (!built.ok) return { slots: [], error: built.error };
+
+  const available = built.options
+    .filter((o) => o.status === "available")
+    .map((o) => o.time);
 
   if (available.length === 0) {
+    const hasFutureFull = built.options.some(
+      (o) => o.status === "full" || o.status === "past"
+    );
     return {
       slots: [],
-      error:
-        date === todayString()
+      error: hasFutureFull
+        ? date === todayString()
           ? "Bugün için müsait saat kalmadı."
-          : "Bu tarih için müsait saat yok.",
+          : "Bu tarih için müsait saat yok."
+        : "Bu tarih için müsait saat yok.",
     };
   }
 

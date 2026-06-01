@@ -53,6 +53,11 @@ function staffCanDoService(
   return allowed.includes(serviceId);
 }
 
+type BookingSlotUi = {
+  time: string;
+  status: "available" | "full" | "past";
+};
+
 export function RandevuForm({
   services,
   staffOptions = [],
@@ -79,7 +84,7 @@ export function RandevuForm({
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [note, setNote] = useState("");
-  const [slots, setSlots] = useState<string[]>([]);
+  const [slotOptions, setSlotOptions] = useState<BookingSlotUi[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -145,15 +150,17 @@ export function RandevuForm({
       const res = await fetch(`/api/appointments/slots?${params}`);
       const data = await res.json();
       if (data.error) {
-        setSlots([]);
+        setSlotOptions([]);
         if (step >= timeStep) setError(data.error);
       } else {
-        setSlots(data.slots || []);
+        setSlotOptions(
+          Array.isArray(data.slots) ? (data.slots as BookingSlotUi[]) : []
+        );
         if (step >= timeStep) setError("");
       }
     } catch {
       setError("Müsait saatler yüklenemedi. Sayfayı yenileyip tekrar deneyin.");
-      setSlots([]);
+      setSlotOptions([]);
     } finally {
       setLoadingSlots(false);
     }
@@ -589,24 +596,38 @@ export function RandevuForm({
           </p>
           {loadingSlots ? (
             <p className="text-center text-gray-500">Müsait saatler yükleniyor...</p>
-          ) : slots.length === 0 ? (
-            <p className="text-center text-gray-500">Müsait saat yok. Başka tarih seçin.</p>
+          ) : slotOptions.length === 0 ? (
+            <p className="text-center text-gray-500">Saat listesi yok. Başka tarih seçin.</p>
           ) : (
             <div className="grid grid-cols-3 gap-2 max-md:grid-cols-2">
-              {slots.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setStartTime(t)}
-                  className={`rounded-xl border py-3 text-sm font-medium transition-all max-md:min-h-[2.75rem] ${
-                    startTime === t
-                      ? "border-rose-700 bg-gradient-to-br from-rose-700 to-rose-900 text-white shadow-md"
-                      : "border-rose-200 hover:border-gold hover:bg-champagne"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+              {slotOptions.map((slot) => {
+                const selectable = slot.status === "available";
+                const selected = selectable && startTime === slot.time;
+                return (
+                  <button
+                    key={slot.time}
+                    type="button"
+                    disabled={!selectable}
+                    onClick={() => selectable && setStartTime(slot.time)}
+                    className={`flex flex-col items-center justify-center rounded-xl border py-2.5 text-sm font-medium transition-all max-md:min-h-[2.75rem] ${
+                      slot.status === "full"
+                        ? "cursor-not-allowed border-gray-300 bg-gray-100 text-gray-500"
+                        : slot.status === "past"
+                          ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                          : selected
+                            ? "border-rose-700 bg-gradient-to-br from-rose-700 to-rose-900 text-white shadow-md"
+                            : "border-rose-200 hover:border-gold hover:bg-champagne"
+                    }`}
+                  >
+                    <span className="font-semibold tabular-nums">{slot.time}</span>
+                    {slot.status === "full" && (
+                      <span className="mt-0.5 text-[10px] font-medium uppercase tracking-wide">
+                        Dolu
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
           <div>

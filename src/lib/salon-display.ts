@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_SALON_SETTINGS, safeDbQuery } from "@/lib/db-safe";
 
@@ -6,7 +7,7 @@ export type SalonDisplaySettings = {
   showDuration: boolean;
 };
 
-export async function getSalonDisplaySettings(): Promise<SalonDisplaySettings> {
+export const getSalonDisplaySettings = cache(async (): Promise<SalonDisplaySettings> => {
   const settings = await safeDbQuery(
     () =>
       prisma.salonSettings.findUnique({
@@ -20,4 +21,4 @@ export async function getSalonDisplaySettings(): Promise<SalonDisplaySettings> {
     showPrice: settings?.showServicePrice ?? fallback.showServicePrice,
     showDuration: settings?.showServiceDuration ?? fallback.showServiceDuration,
   };
-}
+});

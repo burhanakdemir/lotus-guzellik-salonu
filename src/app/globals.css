@@ -356,6 +356,12 @@ body {
   max-width: 28rem;
 }
 
+/* Uzun hizmet listelerinde tarayıcıya geç görünür alanları boyamasını ertele */
+.services-list-defer .card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
+}
+
 /* Hizmetler sayfası — kompakt üst alan */
 .services-page-hero {
   padding-top: 1.25rem;

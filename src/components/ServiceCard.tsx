@@ -38,9 +38,9 @@ export function ServiceCard({
             imageUrl={imageUrl}
             alt={name}
             fill
-            className="object-cover transition duration-700 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, 33vw"
-            priority={false}
+            className="object-cover transition duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-lotus-900/75 via-lotus-900/10 to-transparent" />
           <span className="absolute left-4 top-4 rounded-full bg-gradient-to-r from-gold-dark via-gold to-lotus-center px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-lotus-900 shadow-md shadow-gold/30">

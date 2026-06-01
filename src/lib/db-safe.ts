@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { servicesCatalog } from "../../prisma/services-catalog";
 
@@ -88,9 +89,9 @@ export async function safeDbQuery<T>(
   }
 }
 
-export async function getSalonSettingsSafe() {
+export const getSalonSettingsSafe = cache(async () => {
   return safeDbQuery(
     () => prisma.salonSettings.findUnique({ where: { id: "default" } }),
     { ...DEFAULT_SALON_SETTINGS }
   );
-}
+});

@@ -1,5 +1,7 @@
-import { readFile, stat } from "fs/promises";
+import { createReadStream } from "fs";
+import { stat } from "fs/promises";
 import path from "path";
+import { Readable } from "stream";
 import { NextResponse } from "next/server";
 import { getUploadRoot } from "@/lib/uploads";
 
@@ -45,14 +47,18 @@ export async function GET(
     if (!info.isFile()) {
       return NextResponse.json({ error: "Bulunamadı" }, { status: 404 });
     }
-    const buf = await readFile(filePath);
     const ext = path.extname(filename).slice(1).toLowerCase();
     const contentType = MIME[ext] || "application/octet-stream";
+    const stream = Readable.toWeb(
+      createReadStream(filePath)
+    ) as ReadableStream<Uint8Array>;
 
-    return new NextResponse(buf, {
+    return new NextResponse(stream, {
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control":
+          "public, max-age=604800, stale-while-revalidate=86400",
+        "Content-Length": String(info.size),
       },
     });
   } catch {

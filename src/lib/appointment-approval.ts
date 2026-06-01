@@ -72,6 +72,46 @@ export async function approveAppointment(
   return {};
 }
 
+/** Onaylı veya bekleyen randevuyu iptal (usta / süper admin, kendi ataması) */
+export async function cancelAppointment(
+  appointmentId: string,
+  actor: AppointmentActor
+): Promise<{ error?: string }> {
+  const existing = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+    include: { service: true },
+  });
+  if (!existing) return { error: "Randevu bulunamadı." };
+  if (!canEditAppointment(actor, existing)) {
+    return { error: "Bu randevuyu iptal etme yetkiniz yok." };
+  }
+  if (existing.status === "CANCELLED") {
+    return { error: "Randevu zaten iptal edilmiş." };
+  }
+  if (existing.status === "COMPLETED") {
+    return { error: "Tamamlanmış randevu iptal edilemez." };
+  }
+
+  await prisma.appointment.update({
+    where: { id: appointmentId },
+    data: { status: "CANCELLED" },
+  });
+
+  if (existing.userId) {
+    const wasConfirmed = existing.status === "CONFIRMED";
+    await deliverMemberNotifications({
+      userIds: [existing.userId],
+      title: wasConfirmed ? "Randevunuz iptal edildi" : "Randevu talebiniz iptal edildi",
+      body: wasConfirmed
+        ? `${existing.service.name} · ${existing.date} ${existing.startTime} randevusu iptal edildi.`
+        : `${existing.service.name} · ${existing.date} ${existing.startTime} — talep iptal edildi.`,
+      kind: "INFO",
+    }).catch(() => {});
+  }
+
+  return {};
+}
+
 export async function rejectAppointment(
   appointmentId: string,
   actor: AppointmentActor

@@ -16,14 +16,20 @@ export function AppointmentViewModal({
   apt,
   multiAdminEnabled,
   canEdit,
+  canCancel,
   onClose,
   onEdit,
+  onCancel,
+  actionSaving = false,
 }: {
   apt: CalendarAppointment;
   multiAdminEnabled: boolean;
   canEdit: boolean;
+  canCancel: boolean;
   onClose: () => void;
-  onEdit: () => void;
+  onEdit?: () => void;
+  onCancel?: () => void;
+  actionSaving?: boolean;
 }) {
   const memberName = getAppointmentMemberDisplayName(apt);
 
@@ -83,11 +89,31 @@ export function AppointmentViewModal({
         </section>
 
         <div className="flex flex-wrap justify-end gap-2 border-t border-gray-100 pt-2">
-          <button type="button" className="btn-secondary" onClick={onClose}>
+          {canCancel && onCancel && (
+            <button
+              type="button"
+              className="btn-secondary !border-red-200 !text-red-700 hover:!bg-red-50"
+              disabled={actionSaving}
+              onClick={() => void onCancel()}
+            >
+              {actionSaving ? "İptal ediliyor…" : "Randevuyu iptal et"}
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={onClose}
+            disabled={actionSaving}
+          >
             Kapat
           </button>
-          {canEdit && (
-            <button type="button" className="btn-primary" onClick={onEdit}>
+          {canEdit && onEdit && (
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={onEdit}
+              disabled={actionSaving}
+            >
               Düzenle
             </button>
           )}

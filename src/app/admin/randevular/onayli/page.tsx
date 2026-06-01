@@ -70,6 +70,9 @@ export default async function OnayliRandevularPage(props: {
         showStaff={multiAdmin}
         staffBannerName={staffBannerName}
         backHref={backHref}
+        isSuperAdmin={superAdmin}
+        currentStaffProfileId={session.staffProfileId ?? null}
+        multiAdminEnabled={multiAdmin}
       />
     </div>
   );

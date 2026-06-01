@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { CalendarAppointment } from "@/components/admin/AppointmentsCalendar";
+import { AppointmentViewModal } from "@/components/admin/AppointmentViewModal";
 import { getAppointmentBookerName } from "@/lib/admin-appointment-line";
+import { canEditAppointment } from "@/lib/admin-permissions";
 import { formatPhoneDisplay } from "@/lib/phone";
 import { isAppointmentInPast } from "@/lib/timezone";
 
@@ -14,6 +16,9 @@ type Props = {
   showStaff?: boolean;
   staffBannerName?: string | null;
   backHref?: string;
+  isSuperAdmin?: boolean;
+  currentStaffProfileId?: string | null;
+  multiAdminEnabled?: boolean;
 };
 
 const BASE_COLUMNS = [
@@ -45,9 +50,11 @@ function getStaffLabel(apt: CalendarAppointment): string {
 function ConfirmedAppointmentsTable({
   appointments,
   showStaffColumn,
+  onSelect,
 }: {
   appointments: CalendarAppointment[];
   showStaffColumn: boolean;
+  onSelect: (apt: CalendarAppointment) => void;
 }) {
   const columns = showStaffColumn ? [...BASE_COLUMNS, "Usta"] : [...BASE_COLUMNS];
   const gridClass = showStaffColumn
@@ -65,11 +72,12 @@ function ConfirmedAppointmentsTable({
       </div>
       <ul className="confirmed-apt-table__body">
         {appointments.map((apt) => (
-          <li
-            key={apt.id}
-            className={`confirmed-apt-table__row ${gridClass}`}
-            role="row"
-          >
+          <li key={apt.id} role="row">
+            <button
+              type="button"
+              className={`confirmed-apt-table__row confirmed-apt-table__row-btn ${gridClass}`}
+              onClick={() => onSelect(apt)}
+            >
             <span className="confirmed-apt-table__td" role="cell">
               {getAppointmentBookerName(apt)}
             </span>
@@ -90,6 +98,7 @@ function ConfirmedAppointmentsTable({
                 {getStaffLabel(apt)}
               </span>
             )}
+            </button>
           </li>
         ))}
       </ul>
@@ -102,22 +111,84 @@ export function ConfirmedAppointmentsList({
   showStaff = false,
   staffBannerName = null,
   backHref = "/admin/randevular",
+  isSuperAdmin = true,
+  currentStaffProfileId = null,
+  multiAdminEnabled = false,
 }: Props) {
   const banner = staffBannerName?.trim() || null;
   const showStaffColumn = showStaff && !banner;
   const [tab, setTab] = useState<Tab>("upcoming");
+  const [rows, setRows] = useState(appointments);
+  const [viewApt, setViewApt] = useState<CalendarAppointment | null>(null);
+  const [actionSaving, setActionSaving] = useState(false);
+  const [actionError, setActionError] = useState("");
+
+  const actor = {
+    role: (isSuperAdmin ? "ADMIN" : "STAFF_ADMIN") as "ADMIN" | "STAFF_ADMIN",
+    staffProfileId: currentStaffProfileId,
+  };
+
+  function canEdit(apt: CalendarAppointment) {
+    if (!multiAdminEnabled || isSuperAdmin) return true;
+    return canEditAppointment(actor, {
+      assignedStaffId: apt.assignedStaffId ?? null,
+    });
+  }
+
+  async function cancelAppointment(id: string) {
+    const apt = rows.find((a) => a.id === id);
+    if (apt && !canEdit(apt)) {
+      setActionError("Bu randevuyu iptal etme yetkiniz yok.");
+      return;
+    }
+    if (
+      !window.confirm(
+        "Bu randevuyu iptal etmek istediğinize emin misiniz?"
+      )
+    ) {
+      return;
+    }
+    setActionError("");
+    setActionSaving(true);
+    try {
+      const res = await fetch(`/api/admin/appointments/${id}/cancel`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setActionError(
+          (data as { error?: string }).error || "İptal edilemedi."
+        );
+        return;
+      }
+      const updated = (data as { appointment: CalendarAppointment }).appointment;
+      setRows((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, ...updated } : a))
+      );
+      setViewApt(null);
+    } catch {
+      setActionError("Bağlantı hatası.");
+    } finally {
+      setActionSaving(false);
+    }
+  }
+
+  useEffect(() => {
+    setRows(appointments);
+  }, [appointments]);
 
   const { upcoming, past } = useMemo(() => {
     const up: CalendarAppointment[] = [];
     const pa: CalendarAppointment[] = [];
-    for (const apt of appointments) {
+    for (const apt of rows) {
+      if (apt.status === "CANCELLED") continue;
       if (isAppointmentInPast(apt.date, apt.endTime)) pa.push(apt);
       else up.push(apt);
     }
     up.sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
     pa.sort((a, b) => sortKey(b).localeCompare(sortKey(a)));
     return { upcoming: up, past: pa };
-  }, [appointments]);
+  }, [rows]);
 
   const activeList = tab === "upcoming" ? upcoming : past;
 
@@ -170,6 +241,12 @@ export function ConfirmedAppointmentsList({
         </p>
       )}
 
+      {actionError && (
+        <p className="rounded bg-red-50 px-3 py-2 text-[11px] text-red-700">
+          {actionError}
+        </p>
+      )}
+
       {activeList.length === 0 ? (
         <p className="card text-[11px] text-gray-500">
           {tab === "upcoming"
@@ -180,6 +257,23 @@ export function ConfirmedAppointmentsList({
         <ConfirmedAppointmentsTable
           appointments={activeList}
           showStaffColumn={showStaffColumn}
+          onSelect={setViewApt}
+        />
+      )}
+
+      {viewApt && (
+        <AppointmentViewModal
+          apt={viewApt}
+          multiAdminEnabled={multiAdminEnabled}
+          canEdit={false}
+          canCancel={
+            canEdit(viewApt) &&
+            viewApt.status !== "CANCELLED" &&
+            viewApt.status !== "COMPLETED"
+          }
+          actionSaving={actionSaving}
+          onClose={() => setViewApt(null)}
+          onCancel={() => cancelAppointment(viewApt.id)}
         />
       )}
     </div>

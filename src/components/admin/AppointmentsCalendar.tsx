@@ -233,6 +233,49 @@ export function AppointmentsCalendar({
     }
   }
 
+  async function cancelAppointmentById(id: string) {
+    const apt =
+      appointments.find((a) => a.id === id) ??
+      visibleAppointments.find((a) => a.id === id) ??
+      viewAppointment;
+    if (apt && !canEdit(apt)) {
+      setStatusError("Bu randevuyu iptal etme yetkiniz yok.");
+      return;
+    }
+    if (
+      !window.confirm(
+        "Bu randevuyu iptal etmek istediğinize emin misiniz?"
+      )
+    ) {
+      return;
+    }
+    setStatusError("");
+    setStatusSaving(true);
+    try {
+      const res = await fetch(`/api/admin/appointments/${id}/cancel`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatusError(
+          (data as { error?: string }).error || "İptal edilemedi."
+        );
+        return;
+      }
+      const updated = (data as { appointment: CalendarAppointment }).appointment;
+      if (updated) {
+        applyAppointmentUpdate(updated);
+        if (viewAppointment?.id === id) {
+          setViewAppointment(updated);
+        }
+      }
+    } catch {
+      setStatusError("Bağlantı hatası.");
+    } finally {
+      setStatusSaving(false);
+    }
+  }
+
   async function rejectAppointmentById(id: string) {
     if (statusSaving) return;
     setStatusError("");
@@ -566,8 +609,15 @@ export function AppointmentsCalendar({
           apt={viewAppointment}
           multiAdminEnabled={multiAdminEnabled}
           canEdit={canEdit(viewAppointment)}
+          canCancel={
+            canEdit(viewAppointment) &&
+            viewAppointment.status !== "CANCELLED" &&
+            viewAppointment.status !== "COMPLETED"
+          }
+          actionSaving={statusSaving}
           onClose={() => setViewAppointment(null)}
           onEdit={() => setEditAppointment(viewAppointment)}
+          onCancel={() => cancelAppointmentById(viewAppointment.id)}
         />
       )}
 

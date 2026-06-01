@@ -865,8 +865,26 @@ body:has(.admin-shell) {
   text-overflow: ellipsis;
 }
 
-.confirmed-apt-table__row:hover {
+.confirmed-apt-table__row:hover,
+.confirmed-apt-table__row-btn:hover {
   background: #f5eef1;
+}
+
+.confirmed-apt-table__row-btn {
+  display: grid;
+  width: 100%;
+  margin: 0;
+  padding: 0.4rem 0.65rem;
+  border: none;
+  border-bottom: 1px solid #f0e4e8;
+  background: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.confirmed-apt-table__row-btn:nth-child(even) {
+  background: #faf7f8;
 }
 
 .apt-approval-summary {

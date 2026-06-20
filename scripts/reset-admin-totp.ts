@@ -25,7 +25,14 @@ export async function resetSuperAdminTotp(prisma: PrismaClient): Promise<boolean
     "Neşe AKDEMİR";
 
   let user = await prisma.user.findFirst({
-    where: { role: Role.ADMIN, phone: adminPhone },
+    where: {
+      role: Role.ADMIN,
+      OR: [
+        { phone: adminPhone },
+        { phone: `0${adminPhone}` },
+        { phone: `90${adminPhone}` },
+      ],
+    },
     select: {
       id: true,
       name: true,

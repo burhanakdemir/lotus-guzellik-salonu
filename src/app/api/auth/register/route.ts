@@ -4,21 +4,37 @@ import { deliverMemberNotifications } from "@/lib/member-notifications";
 import { ensureMemberNotificationPreference } from "@/lib/notification-preferences";
 import { hashPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
+import { apiErrorFromUnknown } from "@/lib/prisma-errors";
 import { normalizePhone } from "@/lib/utils";
 import { z } from "zod";
 
 const schema = z.object({
-  name: z.string().min(2),
-  phone: z.string().min(10),
+  name: z.string().trim().min(2, "Ad soyad en az 2 karakter olmalıdır."),
+  phone: z.string().trim().min(10, "Geçerli telefon girin."),
   email: z.string().email().optional().or(z.literal("")),
-  password: z.string().min(6),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır."),
 });
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "İstek okunamadı. Sayfayı yenileyip tekrar deneyin." },
+        { status: 400 }
+      );
+    }
+
     const data = schema.parse(body);
     const phone = normalizePhone(data.phone);
+    if (phone.length !== 10) {
+      return NextResponse.json(
+        { error: "Geçerli bir telefon numarası girin (10 hane)." },
+        { status: 400 }
+      );
+    }
 
     const existing = await prisma.user.findUnique({ where: { phone } });
     if (existing) {
@@ -57,7 +73,13 @@ export async function POST(req: Request) {
     await setSessionCookie(token);
 
     return NextResponse.json({ user: sessionUser });
-  } catch {
-    return NextResponse.json({ error: "Kayıt başarısız." }, { status: 400 });
+  } catch (e) {
+    console.error("[auth/register]", e);
+    if (e instanceof z.ZodError) {
+      const msg = e.issues[0]?.message || "Bilgileri kontrol edin.";
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+    const { status, error } = apiErrorFromUnknown(e);
+    return NextResponse.json({ error }, { status });
   }
 }

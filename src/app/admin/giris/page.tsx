@@ -62,9 +62,22 @@ export default function AdminGirisPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({
+          phone: phone.trim(),
+          password: password.trim(),
+        }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok && !data.requiresTotp && !data.requiresTotpSetup) {
+        setError(
+          (data as { error?: string }).error ||
+            (res.status === 503
+              ? "Sunucu geçici olarak hazır değil. Birkaç dakika sonra tekrar deneyin."
+              : "Giriş başarısız.")
+        );
+        return;
+      }
 
       if (data.requiresTotp) {
         setPendingToken(data.pendingToken);

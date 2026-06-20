@@ -12,6 +12,7 @@ import { PrismaClient } from "@prisma/client";
 import { mkdir, writeFile, unlink } from "fs/promises";
 import { ensureAdminUser } from "./ensure-admin";
 import { resetSuperAdminTotp } from "./reset-admin-totp";
+import { isDbConnectionError } from "../src/lib/prisma-errors";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -36,12 +37,13 @@ async function checkUploadRootWritable(): Promise<boolean> {
   }
 }
 
-function databaseUrlForPush(): string {
-  const url = process.env.DIRECT_URL || process.env.DATABASE_URL;
-  if (!url) {
-    throw new Error("DATABASE_URL veya DIRECT_URL tanımlı değil.");
-  }
-  return url;
+async function withTimeout<T>(ms: number, label: string, fn: () => Promise<T>): Promise<T> {
+  return Promise.race([
+    fn(),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} zaman aşımı (${ms / 1000}s)`)), ms)
+    ),
+  ]);
 }
 
 async function main() {
@@ -62,66 +64,79 @@ async function main() {
     DEPLOY_LOCK_IMAGES: "true",
   });
   run("npx prisma generate", "Prisma client");
-  run("npx prisma db push", "Veritabanı şeması", {
-    ...process.env,
-    DATABASE_URL: databaseUrlForPush(),
-  });
+  // db push build aşamasında yapılır; Neon kapalıysa start'ı bloklamasın
 
   const prisma = new PrismaClient();
   try {
-    await ensureAdminUser(prisma);
+    await withTimeout(20_000, "Veritabanı bağlantısı", async () => {
+      await prisma.$connect();
+      await ensureAdminUser(prisma);
 
-    const resetTotp =
-      process.env.RESET_ADMIN_TOTP === "true" ||
-      process.env.RESET_ADMIN_TOTP === "1";
-    if (resetTotp) {
-      console.log("\n→ RESET_ADMIN_TOTP: süper admin authenticator sıfırlanıyor (tek seferlik)…");
-      await resetSuperAdminTotp(prisma);
-      console.log(
-        "→ Deploy sonrası Render'dan RESET_ADMIN_TOTP değişkenini kaldırın (tekrar sıfırlamasın)."
-      );
-    }
+      const resetTotp =
+        process.env.RESET_ADMIN_TOTP === "true" ||
+        process.env.RESET_ADMIN_TOTP === "1";
+      if (resetTotp) {
+        console.log("\n→ RESET_ADMIN_TOTP: süper admin authenticator sıfırlanıyor (tek seferlik)…");
+        await resetSuperAdminTotp(prisma);
+        console.log(
+          "→ Deploy sonrası Render'dan RESET_ADMIN_TOTP değişkenini kaldırın (tekrar sıfırlamasın)."
+        );
+      }
 
-    const featuredMigrated = await prisma.service.updateMany({
-      where: { isFeatured: true, deletedAt: null, showPriceOnHomepage: false },
-      data: { showPriceOnHomepage: true },
-    });
-    if (featuredMigrated.count > 0) {
-      console.log(
-        `→ ${featuredMigrated.count} öne çıkan hizmet: ana sayfa fiyat gösterimi açıldı (geriye uyum).`
-      );
-    }
-
-    const activeCount = await prisma.service.count({
-      where: { deletedAt: null, isActive: true },
-    });
-    const totalCount = await prisma.service.count();
-
-    const forceLock =
-      process.env.FORCE_DEPLOY_LOCK === "true" ||
-      process.env.FORCE_DEPLOY_LOCK === "1";
-    const runSeed = process.env.RUN_SEED === "true" || process.env.RUN_SEED === "1";
-
-    if (totalCount === 0) {
-      run("node scripts/import-deploy-lock.mjs", "İlk kurulum: deploy kilidi (hizmetler)");
-      run("npx tsx prisma/seed.ts", "Salon ayarları, kampanya, admin profili", {
-        ...process.env,
-        SEED_SERVICES: "false",
+      const featuredMigrated = await prisma.service.updateMany({
+        where: { isFeatured: true, deletedAt: null, showPriceOnHomepage: false },
+        data: { showPriceOnHomepage: true },
       });
-    } else if (runSeed && forceLock) {
-      console.log("\n→ RUN_SEED + FORCE_DEPLOY_LOCK: hizmet kilidi yeniden yükleniyor…");
-      run("node scripts/import-deploy-lock.mjs", "Deploy kilidi (zorla)");
-    } else if (runSeed) {
-      console.log(
-        "\n→ RUN_SEED atlandı (DB dolu). Hizmetleri kilitten yüklemek için FORCE_DEPLOY_LOCK=true"
+      if (featuredMigrated.count > 0) {
+        console.log(
+          `→ ${featuredMigrated.count} öne çıkan hizmet: ana sayfa fiyat gösterimi açıldı (geriye uyum).`
+        );
+      }
+
+      const activeCount = await prisma.service.count({
+        where: { deletedAt: null, isActive: true },
+      });
+      const totalCount = await prisma.service.count();
+
+      const forceLock =
+        process.env.FORCE_DEPLOY_LOCK === "true" ||
+        process.env.FORCE_DEPLOY_LOCK === "1";
+      const runSeed = process.env.RUN_SEED === "true" || process.env.RUN_SEED === "1";
+
+      if (totalCount === 0) {
+        run("node scripts/import-deploy-lock.mjs", "İlk kurulum: deploy kilidi (hizmetler)");
+        run("npx tsx prisma/seed.ts", "Salon ayarları, kampanya, admin profili", {
+          ...process.env,
+          SEED_SERVICES: "false",
+        });
+      } else if (runSeed && forceLock) {
+        console.log("\n→ RUN_SEED + FORCE_DEPLOY_LOCK: hizmet kilidi yeniden yükleniyor…");
+        run("node scripts/import-deploy-lock.mjs", "Deploy kilidi (zorla)");
+      } else if (runSeed) {
+        console.log(
+          "\n→ RUN_SEED atlandı (DB dolu). Hizmetleri kilitten yüklemek için FORCE_DEPLOY_LOCK=true"
+        );
+      } else {
+        console.log(
+          `\n→ Hizmetler korundu (${activeCount} aktif / ${totalCount} toplam). Admin yüklemeleri ve fiyatlar aynı.`
+        );
+      }
+    });
+  } catch (e) {
+    const timedOut =
+      e instanceof Error && e.message.includes("zaman aşımı");
+    if (isDbConnectionError(e) || timedOut) {
+      console.warn(
+        "\n⚠ Veritabanına ulaşılamadı — Next.js yine de başlatılacak."
+      );
+      console.warn(
+        "  Neon panelinde projeyi uyandırın; Render'da DATABASE_URL (pooler) ve DIRECT_URL doğru mu kontrol edin."
       );
     } else {
-      console.log(
-        `\n→ Hizmetler korundu (${activeCount} aktif / ${totalCount} toplam). Admin yüklemeleri ve fiyatlar aynı.`
-      );
+      throw e;
     }
   } finally {
-    await prisma.$disconnect();
+    await prisma.$disconnect().catch(() => {});
   }
 
   console.log("\n✓ Canlı kurulum tamamlandı.");
